@@ -213,11 +213,138 @@
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     items.forEach(function (el) { io.observe(el); });
+
+    /* Editorial line-by-line reveal (brand statement, etc.) — same trigger,
+       but each line gets a small stagger relative to its siblings. */
+    document.querySelectorAll('.reveal-line').forEach(function (el) {
+      var siblings = Array.prototype.filter.call(el.parentElement.children, function (c) {
+        return c.classList.contains('reveal-line');
+      });
+      var index = siblings.indexOf(el);
+      el.style.transitionDelay = (index * 90) + 'ms';
+    });
+    var lineIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          lineIo.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('.reveal-line').forEach(function (el) { lineIo.observe(el); });
   }
 
   /* ==========================================================================
      HEADER + MOBILE MENU
      ========================================================================== */
+
+  /* ==========================================================================
+     CUSTOM CURSOR — desktop / fine-pointer only, built entirely here so no
+     page markup is needed. Disabled on touch and prefers-reduced-motion.
+     ========================================================================== */
+
+  function initCursor() {
+    var fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!fine || reduced) return;
+
+    document.documentElement.classList.add('has-custom-cursor');
+
+    var dot = document.createElement('div');
+    dot.className = 'bn-cursor-dot';
+    var ring = document.createElement('div');
+    ring.className = 'bn-cursor-ring';
+    document.body.appendChild(dot);
+    document.body.appendChild(ring);
+
+    var dotX = 0, dotY = 0, ringX = 0, ringY = 0;
+    var visible = false;
+
+    function loop() {
+      ringX += (dotX - ringX) * 0.2;
+      ringY += (dotY - ringY) * 0.2;
+      ring.style.transform = 'translate(' + ringX + 'px,' + ringY + 'px) translate(-50%,-50%)';
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    document.addEventListener('mousemove', function (e) {
+      dotX = e.clientX; dotY = e.clientY;
+      dot.style.transform = 'translate(' + dotX + 'px,' + dotY + 'px) translate(-50%,-50%)';
+      if (!visible) { visible = true; ring.classList.add('is-visible'); }
+    });
+    document.addEventListener('mouseleave', function () { ring.classList.remove('is-visible'); });
+
+    document.addEventListener('mouseover', function (e) {
+      var labelTarget = e.target.closest && e.target.closest('[data-cursor]');
+      var interactive = e.target.closest && e.target.closest('a, button, input, select, textarea, [role="button"], .option-card, .facet-pill, .mood-chip, .tryon-card, .portfolio-item');
+      if (labelTarget) {
+        ring.textContent = labelTarget.dataset.cursor.toUpperCase();
+        ring.classList.add('is-label');
+        ring.classList.remove('is-expanded');
+      } else if (interactive) {
+        ring.textContent = '';
+        ring.classList.add('is-expanded');
+        ring.classList.remove('is-label');
+      }
+    });
+    document.addEventListener('mouseout', function (e) {
+      var toInteractive = e.relatedTarget && e.relatedTarget.closest &&
+        e.relatedTarget.closest('a, button, input, select, textarea, [role="button"], [data-cursor], .option-card, .facet-pill, .mood-chip, .tryon-card, .portfolio-item');
+      if (!toInteractive) {
+        ring.classList.remove('is-expanded', 'is-label');
+        ring.textContent = '';
+      }
+    });
+  }
+
+  /* ==========================================================================
+     LOADING SCREEN — home page only, once per browser session.
+     ========================================================================== */
+
+  function initLoader() {
+    if (document.body.dataset.page !== 'home') return;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || sessionStorage.getItem('belnails:loaded')) return;
+
+    var loader = document.createElement('div');
+    loader.className = 'bn-loader';
+    loader.setAttribute('aria-hidden', 'true');
+    loader.innerHTML =
+      '<span class="bn-loader__word">Bel Nails</span>' +
+      '<span class="bn-loader__word bn-loader__word--sub">Cyprus</span>';
+    document.body.appendChild(loader);
+    document.body.style.overflow = 'hidden';
+
+    function dismiss() {
+      loader.classList.add('is-hidden');
+      document.body.style.overflow = '';
+      try { sessionStorage.setItem('belnails:loaded', '1'); } catch (e) {}
+      setTimeout(function () { loader.remove(); }, 550);
+    }
+    var timer = setTimeout(dismiss, 1100);
+    loader.addEventListener('click', function () { clearTimeout(timer); dismiss(); });
+  }
+
+  /* ==========================================================================
+     SUBTLE CURSOR PARALLAX — [data-parallax] elements drift slightly toward
+     the pointer. Fine-pointer + motion-safe only.
+     ========================================================================== */
+
+  function initParallax() {
+    var fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('[data-parallax]');
+    if (!fine || reduced || !els.length) return;
+
+    document.addEventListener('mousemove', function (e) {
+      var cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      var dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
+      els.forEach(function (el) {
+        el.style.transform = 'translate(' + (dx * -10) + 'px,' + (dy * -8) + 'px)';
+      });
+    });
+  }
 
   function initHeader() {
     var header = document.getElementById('siteHeader');
@@ -346,12 +473,12 @@
       return;
     }
 
-    items.forEach(function (item) {
-      grid.appendChild(buildPortfolioCard(item));
+    items.forEach(function (item, index) {
+      grid.appendChild(buildPortfolioCard(item, index));
     });
   }
 
-  function buildPortfolioCard(item) {
+  function buildPortfolioCard(item, index) {
     var wrap = document.createElement('figure');
     wrap.className = 'portfolio-card';
 
@@ -364,8 +491,10 @@
       : '<div class="portfolio-empty" style="padding:2.5rem 1rem">' + iconSvg('icon-camera') + '</div>';
     btn.addEventListener('click', function () { openViewer(item); });
 
+    var num = typeof index === 'number' ? String(index + 1).padStart(3, '0') : null;
     var caption = document.createElement('figcaption');
-    caption.textContent = labelFor(FACETS[0].options, (item.style || [])[0] || '') || item.service || '';
+    caption.innerHTML = (num ? '<span class="portfolio-card__num">BN / ' + num + '</span> ' : '') +
+      (labelFor(FACETS[0].options, (item.style || [])[0] || '') || item.service || '');
     if (item.src) btn.appendChild(caption);
 
     var heart = document.createElement('button');
@@ -573,8 +702,11 @@
     document.getElementById('bookLookBtn').addEventListener('click', function () {
       handoffAndBook(lookFromQuiz());
     });
+    var shareBtn = document.getElementById('shareLookBtn');
+    if (shareBtn) shareBtn.addEventListener('click', function () { shareLook(lookFromQuiz(), shareBtn); });
     document.getElementById('restartQuizBtn').addEventListener('click', function () {
       quizAnswers = {};
+      currentLookNumber = null;
       document.querySelectorAll('.option-card.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
       goToStep(0);
     });
@@ -621,8 +753,14 @@
     return score;
   }
 
+  var currentLookNumber = null;
+
   function renderResult() {
     goToStep(STEP_KEYS.length - 1);
+
+    if (!currentLookNumber) currentLookNumber = String(Math.floor(Math.random() * 899) + 1).padStart(3, '0');
+    var numEl = document.getElementById('resultLookNumber');
+    if (numEl) numEl.textContent = 'Look / ' + currentLookNumber;
 
     var summary = document.getElementById('resultSummary');
     summary.innerHTML = QUIZ_STEPS.map(function (s) {
@@ -651,7 +789,7 @@
       grid.appendChild(empty);
       return;
     }
-    ranked.forEach(function (item) { grid.appendChild(buildPortfolioCard(item)); });
+    ranked.forEach(function (item, index) { grid.appendChild(buildPortfolioCard(item, index)); });
   }
 
   function lookFromQuiz() {
@@ -676,6 +814,25 @@
     var original = btn.textContent;
     btn.textContent = 'Saved ✓';
     setTimeout(function () { btn.textContent = original; }, 1600);
+  }
+
+  /* Real Web Share API where available (mobile browsers, some desktop);
+     falls back to copying a short text summary to the clipboard. Never a
+     fake "shared!" toast if neither API is actually available. */
+  function shareLook(look, btn) {
+    var text = 'My Bel Nails look: ' + look.title + (metaSummary(look) ? ' (' + metaSummary(look) + ')' : '');
+    if (navigator.share) {
+      navigator.share({ title: 'Bel Nails', text: text, url: location.origin + '/style-finder.html' }).catch(function () {});
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        if (!btn) return;
+        var original = btn.textContent;
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = original; }, 1600);
+      }).catch(function () {});
+    }
   }
 
   /* ==========================================================================
@@ -730,6 +887,24 @@
     card.classList.add('is-visible');
   }
 
+  /* ==========================================================================
+     SERVICES — editorial numbered rows (hover on desktop, tap on mobile)
+     ========================================================================== */
+
+  function initServiceRows() {
+    document.querySelectorAll('.service-row__toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('.service-row');
+        var open = !row.classList.contains('is-open');
+        document.querySelectorAll('.service-row.is-open').forEach(function (r) {
+          if (r !== row) { r.classList.remove('is-open'); }
+        });
+        row.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', String(open));
+      });
+    });
+  }
+
   function initBooking() {
     renderBookingLookCard();
     var clearBtn = document.getElementById('bookingLookClear');
@@ -758,6 +933,14 @@
       });
     });
 
+    var backBtn = document.getElementById('bookingSentBack');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        document.getElementById('bookingSent').hidden = true;
+        document.getElementById('bookingForm').hidden = false;
+      });
+    }
+
     var form = document.getElementById('bookingForm');
     if (!form) return;
     form.addEventListener('submit', function (e) {
@@ -777,7 +960,31 @@
       // PLACEHOLDER: replace with Bel Nails' confirmed booking email address
       var mailto = 'mailto:hello@belnails.cy?subject=' + subject + '&body=' + lines;
       window.location.href = mailto;
+
+      revealBookingSent(f.service.value, f.date.value);
     });
+  }
+
+  /* Shows the honest post-submit state: we opened an email draft, we did
+     not actually book anything. Optionally offers a real "Add to Calendar"
+     link for the visitor's own reminder, framed as unconfirmed. */
+  function revealBookingSent(service, dateValue) {
+    var wrap = document.getElementById('bookingForm');
+    var sent = document.getElementById('bookingSent');
+    if (!wrap || !sent) return;
+    wrap.hidden = true;
+    sent.hidden = false;
+    sent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    var calBtn = document.getElementById('addToCalendarBtn');
+    if (!calBtn) return;
+    if (!dateValue) { calBtn.hidden = true; return; }
+    var ymd = dateValue.replace(/-/g, '');
+    var title = encodeURIComponent('Bel Nails — requested appointment (unconfirmed): ' + service);
+    var details = encodeURIComponent('Requested via belnails.cy — pending confirmation from Bel Nails.');
+    calBtn.href = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title +
+      '&dates=' + ymd + '/' + ymd + '&details=' + details;
+    calBtn.hidden = false;
   }
 
   /* ==========================================================================
@@ -786,9 +993,12 @@
 
   function renderSavedBadge() {
     var count = readSaved().length;
-    var badge = document.getElementById('savedBadge');
-    badge.textContent = String(count);
-    badge.classList.toggle('is-visible', count > 0);
+    ['savedBadge', 'bottomSavedBadge'].forEach(function (id) {
+      var badge = document.getElementById(id);
+      if (!badge) return;
+      badge.textContent = String(count);
+      badge.classList.toggle('is-visible', count > 0);
+    });
   }
 
   function renderDrawer() {
@@ -796,7 +1006,7 @@
     var list = readSaved();
     if (!list.length) {
       body.innerHTML = '<div class="drawer-empty">' + iconSvg('icon-heart') +
-        '<p>Nothing saved yet. Heart a design in the portfolio, or save a look from Find Your Style.</p></div>';
+        '<p>Nothing saved yet. Heart a design in the Lookbook, or save a look from Design Your Set.</p></div>';
       return;
     }
     body.innerHTML = '';
@@ -819,6 +1029,49 @@
       });
       body.appendChild(card);
     });
+    var viewAll = document.createElement('a');
+    viewAll.href = 'collection.html';
+    viewAll.className = 'btn btn--ghost drawer-viewall';
+    viewAll.textContent = 'View full collection';
+    body.appendChild(viewAll);
+  }
+
+  /* ==========================================================================
+     YOUR COLLECTION — dedicated saved-looks page
+     ========================================================================== */
+
+  function initCollectionPage() {
+    var grid = document.getElementById('collectionGrid');
+    var emptyState = document.getElementById('collectionEmpty');
+    if (!grid || !emptyState) return;
+
+    function render() {
+      var list = readSaved();
+      emptyState.hidden = list.length > 0;
+      grid.hidden = list.length === 0;
+      grid.innerHTML = '';
+
+      list.forEach(function (look) {
+        var card = document.createElement('article');
+        card.className = 'collection-card';
+        card.innerHTML =
+          '<div class="collection-card__media">' + (look.img ? '<img src="' + look.img + '" alt="">' : iconSvg('icon-camera')) + '</div>' +
+          '<div class="collection-card__body">' +
+          '<h3>' + look.title + '</h3>' +
+          '<p>' + (metaSummary(look) || (look.service || '')) + '</p>' +
+          '<div class="collection-card__actions">' +
+          '<button class="btn btn--outline-ink btn--sm" data-action="book" data-cursor="book">Book This Look</button>' +
+          '<button class="btn btn--ghost" data-action="share">Share</button>' +
+          '<span class="collection-card__remove" data-action="remove" role="button" tabindex="0" aria-label="Remove from collection">' + iconSvg('icon-close') + '</span>' +
+          '</div></div>';
+        card.querySelector('[data-action="book"]').addEventListener('click', function () { handoffAndBook(look); });
+        card.querySelector('[data-action="share"]').addEventListener('click', function (e) { shareLook(look, e.currentTarget); });
+        card.querySelector('[data-action="remove"]').addEventListener('click', function () { removeSaved(look.id); render(); });
+        grid.appendChild(card);
+      });
+    }
+
+    render();
   }
 
   function openDrawer() {
@@ -1090,6 +1343,9 @@
 
     initHeader();
     initReveal();
+    initCursor();
+    initParallax();
+    initLoader();
 
     buildFacetPills();
     renderPortfolioGrid();
@@ -1101,8 +1357,10 @@
     buildConfigurator();
     initTryOn();
 
+    initServiceRows();
     initBooking();
     initDrawer();
+    initCollectionPage();
     renderSavedBadge();
   });
 })();

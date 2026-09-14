@@ -4,33 +4,62 @@ A multi-page, no-build website for Bel Nails (Nicosia, Cyprus). Plain HTML/CSS/J
 no framework, no build step, no templating. Open `index.html` in a browser or deploy
 the folder as-is.
 
+## Design system
+
+A "futuristic luxury editorial" identity: deep near-black surfaces, soft ivory
+counter-surfaces, Bodoni Moda (dramatic high-contrast serif, oversized display type)
++ Inter (body/UI), and a restrained champagne/deepened-rose accent palette — see the
+tokens at the top of `css/styles.css`. Every interior page opens with a dark
+`.page-hero` moment (mirroring the homepage hero) so the whole site reads as one
+brand, per the design tokens' own comment block. Shared, page-agnostic pieces built
+entirely in `js/main.js` (no per-page markup needed): a custom cursor (desktop/fine
+-pointer only — see `initCursor()`), a short once-per-session loading screen on the
+home page (`initLoader()`), and the mobile bottom nav / page-hero CSS components.
+
 ## Pages
 
 Each major section is its own static HTML file, sharing `css/styles.css` and
 `js/main.js`. There's no templating engine, so the header, mobile menu, footer,
-sticky mobile bar, icon sprite and saved-looks drawer are duplicated at the top/bottom
+mobile bottom nav, icon sprite and saved-looks drawer are duplicated at the top/bottom
 of every file — if you change any of that shared chrome, change it in every page.
 
-| File                  | Page                  |
-|------------------------|-----------------------|
-| `index.html`           | Home (hero + intro)   |
-| `services.html`        | Services              |
-| `portfolio.html`       | Portfolio             |
-| `style-finder.html`    | Find Your Nail Style  |
-| `why-bel-nails.html`   | Why Bel Nails         |
-| `about.html`           | About                 |
-| `reviews.html`         | Reviews               |
-| `try-on.html`          | Try Your Look         |
-| `booking.html`         | Booking               |
-| `instagram.html`       | Instagram             |
-| `contact.html`         | Location & Contact    |
+| File                  | Page                              |
+|------------------------|-----------------------------------|
+| `index.html`           | Home (hero + brand statement)     |
+| `services.html`        | Services (editorial numbered rows)|
+| `portfolio.html`       | The Lookbook                      |
+| `style-finder.html`    | Design Your Set (the configurator)|
+| `why-bel-nails.html`   | Why Bel Nails                     |
+| `about.html`           | Studio (the Artist + the Process) |
+| `reviews.html`         | Reviews                           |
+| `try-on.html`          | Try Your Look                     |
+| `booking.html`         | Booking                           |
+| `instagram.html`       | Instagram                         |
+| `contact.html`         | Location & Contact                |
+| `collection.html`      | Your Collection (saved looks)     |
 
 `portfolio.html` and `style-finder.html` also include the full-screen design viewer
 modal, since both render portfolio cards that open it. Every page's icon sprite only
 includes the icons that page actually uses, plus a small shared set (menu, close,
 heart, camera, Instagram) needed by the header, footer and saved-looks drawer that
 appear everywhere — if you add an icon to a page's content, add its `<symbol>` to
-that page's sprite too.
+that page's sprite too. The mobile bottom nav's 5 icons are inlined directly in each
+page's markup rather than via the sprite, so it never depends on a page's own symbol set.
+
+### What was intentionally simplified from the original brief
+A few asks were scoped down to keep everything honest and genuinely functional
+rather than decorative-only:
+- **No scroll-hijacked horizontal "runway" gallery** — a nice effect, but fragile and
+  motion-heavy for a feature the portfolio can't yet populate with real photos.
+- **No fake multi-step booking wizard with time slots** — there's no real booking
+  backend, so `booking.html` stays an honest "request" form (see below) rather than
+  pretending to check availability.
+- **No "YOU'RE BOOKED" confirmation** — submitting only opens a pre-filled email in
+  the visitor's own email app (see `revealBookingSent()` in `js/main.js`); the reveal
+  screen says exactly that, plus an optional, honestly-labelled "Add to Calendar"
+  link (Google Calendar) for the *requested*, unconfirmed date.
+- **No separate Artist/Process pages** — folded into `about.html` as sections, since
+  there isn't enough real content yet to justify their own URLs.
 
 ### How state survives page-to-page navigation
 - **Saved looks / wishlist** — `localStorage`, so the heart icon and its count in the

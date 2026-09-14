@@ -60,16 +60,14 @@
   <div class="container nav">
     <a href="index.html" class="brand" aria-label="Bel Nails — home">
       <span class="brand-mark">Bel <strong>N</strong>ails</span>
-      <span class="brand-sub">Nicosia · Cyprus</span>
     </a>
 
     <nav class="nav-links" aria-label="Primary">
+      <a href="index.html" data-nav-page="home">Home</a>
       <a href="services.html" data-nav-page="services">Services</a>
-      <a href="portfolio.html" data-nav-page="portfolio">Portfolio</a>
-      <a href="style-finder.html" data-nav-page="style-finder">Find Your Style</a>
-      <a href="about.html" data-nav-page="about">About</a>
-      <a href="reviews.html" data-nav-page="reviews">Reviews</a>
-      <a href="contact.html" data-nav-page="contact">Contact</a>
+      <a href="about.html" data-nav-page="about">Studio</a>
+      <a href="portfolio.html" data-nav-page="portfolio">Lookbook</a>
+      <a href="booking.html" data-nav-page="booking">Book</a>
     </nav>
 
     <div class="nav-actions">
@@ -77,7 +75,7 @@
         <svg class="icon"><use href="#icon-heart"/></svg>
         <span class="badge" id="savedBadge">0</span>
       </button>
-      <a href="booking.html" class="btn btn--primary btn--sm nav-cta">Book Appointment</a>
+      <a href="booking.html" class="btn btn--primary btn--sm nav-cta" data-cursor="book">Book Now</a>
       <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
         <svg class="icon"><use href="#icon-menu"/></svg>
       </button>
@@ -86,67 +84,97 @@
 </header>
 
 <div class="mobile-menu" id="mobileMenu">
+  <a href="index.html" data-nav-page="home">Home</a>
   <a href="services.html" data-nav-page="services">Services</a>
-  <a href="portfolio.html" data-nav-page="portfolio">Portfolio</a>
-  <a href="style-finder.html" data-nav-page="style-finder">Find Your Style</a>
+  <a href="portfolio.html" data-nav-page="portfolio">Lookbook</a>
+  <a href="style-finder.html" data-nav-page="style-finder">Design Your Set</a>
+  <a href="about.html" data-nav-page="about">Studio</a>
   <a href="why-bel-nails.html" data-nav-page="why">Why Bel Nails</a>
-  <a href="about.html" data-nav-page="about">About</a>
   <a href="reviews.html" data-nav-page="reviews">Reviews</a>
   <a href="try-on.html" data-nav-page="try-on">Try Your Look</a>
+  <a href="collection.html" data-nav-page="collection">Your Collection</a>
+  <a href="instagram.html" data-nav-page="instagram">Instagram</a>
   <a href="contact.html" data-nav-page="contact">Contact</a>
-  <a href="booking.html" class="btn btn--primary btn--block">Book Appointment</a>
+  <a href="booking.html" class="btn btn--primary btn--block">Book Now</a>
 </div>
 
 <main id="main">
 
+  <!-- ============================== SERVICES HERO ============================== -->
+  <section class="page-hero">
+    <div class="container page-hero__inner">
+      <span class="eyebrow eyebrow--on-ink">Services</span>
+      <h1 class="page-hero__title">The Services</h1>
+      <p class="page-hero__lede">Precision. Detail. Personal expression. Confirmed Bel Nails specialities below &mdash; pricing and durations will be added as soon as they're confirmed by the studio.</p>
+    </div>
+  </section>
+
   <!-- ============================== SERVICES ============================== -->
-  <section class="services" id="services">
+  <section class="service-rows" id="services">
     <div class="container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Services</span>
-        <h2 class="section-heading">What we offer</h2>
-        <p class="section-lede">Confirmed Bel Nails specialities below. Pricing and durations will be added as soon as they're confirmed by the studio.</p>
+
+      <div class="service-row reveal" data-service="acrylic">
+        <button class="service-row__toggle" type="button" aria-expanded="false">
+          <span class="service-row__index">01</span>
+          <span class="service-row__name">Acrylic</span>
+          <span class="service-row__price chip chip--placeholder">Ask for pricing</span>
+          <svg class="icon service-row__arrow"><use href="#icon-arrow-right"/></svg>
+        </button>
+        <div class="service-row__detail">
+          <div class="service-row__detail-inner">
+            <p>A durable sculpted overlay or extension, shaped and finished to your chosen length and style.</p>
+            <span class="service-row__duration"><!-- PLACEHOLDER -->Duration TBC</span>
+            <a href="booking.html" class="btn btn--outline-ink btn--sm book-service-btn" data-service="acrylic" data-cursor="book">Book / Enquire</a>
+          </div>
+        </div>
       </div>
 
-      <div class="service-grid">
-        <article class="service-card reveal" data-service="acrylic">
-          <div class="service-card__icon"><svg class="icon"><use href="#icon-sparkle"/></svg></div>
-          <h3>Acrylic</h3>
-          <p>A durable sculpted overlay or extension, shaped and finished to your chosen length and style.</p>
-          <div class="service-card__meta">
-            <span class="chip chip--placeholder">Ask for pricing</span>
-            <span><!-- PLACEHOLDER -->Duration TBC</span>
+      <div class="service-row reveal" data-service="builder-gel">
+        <button class="service-row__toggle" type="button" aria-expanded="false">
+          <span class="service-row__index">02</span>
+          <span class="service-row__name">Builder Gel</span>
+          <span class="service-row__price chip chip--placeholder">Ask for pricing</span>
+          <svg class="icon service-row__arrow"><use href="#icon-arrow-right"/></svg>
+        </button>
+        <div class="service-row__detail">
+          <div class="service-row__detail-inner">
+            <p>A flexible, natural-looking gel overlay that strengthens and lengthens the nail.</p>
+            <span class="service-row__duration"><!-- PLACEHOLDER -->Duration TBC</span>
+            <a href="booking.html" class="btn btn--outline-ink btn--sm book-service-btn" data-service="builder-gel" data-cursor="book">Book / Enquire</a>
           </div>
-          <a href="booking.html" class="btn btn--outline-ink btn--sm btn--block book-service-btn" data-service="acrylic">Book / Enquire</a>
-        </article>
-
-        <article class="service-card reveal" data-service="builder-gel">
-          <div class="service-card__icon"><svg class="icon"><use href="#icon-sparkle"/></svg></div>
-          <h3>Builder Gel</h3>
-          <p>A flexible, natural-looking gel overlay that strengthens and lengthens the nail.</p>
-          <div class="service-card__meta">
-            <span class="chip chip--placeholder">Ask for pricing</span>
-            <span><!-- PLACEHOLDER -->Duration TBC</span>
-          </div>
-          <a href="booking.html" class="btn btn--outline-ink btn--sm btn--block book-service-btn" data-service="builder-gel">Book / Enquire</a>
-        </article>
-
-        <article class="service-card reveal" data-service="gel-x">
-          <div class="service-card__icon"><svg class="icon"><use href="#icon-sparkle"/></svg></div>
-          <h3>Gel-X</h3>
-          <p>Lightweight, flexible soft-gel extensions applied over a tip for a natural finish.</p>
-          <div class="service-card__meta">
-            <span class="chip chip--placeholder">Ask for pricing</span>
-            <span><!-- PLACEHOLDER -->Duration TBC</span>
-          </div>
-          <a href="booking.html" class="btn btn--outline-ink btn--sm btn--block book-service-btn" data-service="gel-x">Book / Enquire</a>
-        </article>
-
-        <article class="service-card service-card--placeholder reveal">
-          <h3>Nail Art &amp; Add-Ons</h3>
-          <p><!-- PLACEHOLDER -->More services (nail art, removal, repair, pedicure) will be listed here once confirmed by Bel Nails. Ask in studio.</p>
-        </article>
+        </div>
       </div>
+
+      <div class="service-row reveal" data-service="gel-x">
+        <button class="service-row__toggle" type="button" aria-expanded="false">
+          <span class="service-row__index">03</span>
+          <span class="service-row__name">Gel-X</span>
+          <span class="service-row__price chip chip--placeholder">Ask for pricing</span>
+          <svg class="icon service-row__arrow"><use href="#icon-arrow-right"/></svg>
+        </button>
+        <div class="service-row__detail">
+          <div class="service-row__detail-inner">
+            <p>Lightweight, flexible soft-gel extensions applied over a tip for a natural finish.</p>
+            <span class="service-row__duration"><!-- PLACEHOLDER -->Duration TBC</span>
+            <a href="booking.html" class="btn btn--outline-ink btn--sm book-service-btn" data-service="gel-x" data-cursor="book">Book / Enquire</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="service-row service-row--placeholder reveal">
+        <button class="service-row__toggle" type="button" aria-expanded="false">
+          <span class="service-row__index">04</span>
+          <span class="service-row__name">Nail Art &amp; Add-Ons</span>
+          <span class="service-row__price is-placeholder">Coming soon</span>
+          <svg class="icon service-row__arrow"><use href="#icon-arrow-right"/></svg>
+        </button>
+        <div class="service-row__detail">
+          <div class="service-row__detail-inner">
+            <p><!-- PLACEHOLDER -->More services (nail art, removal, repair, pedicure) will be listed here once confirmed by Bel Nails. Ask in studio.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -154,9 +182,12 @@
 
 <!-- ============================== FOOTER ============================== -->
 <footer class="site-footer">
+  <div class="container footer-hero">
+    <span class="footer-wordmark">Bel <strong>Nails</strong></span>
+    <p class="footer-tagline">Your next set starts here.</p>
+  </div>
   <div class="container footer-grid">
     <div class="footer-brand">
-      <span class="brand-mark">Bel <strong>N</strong>ails</span>
       <p>Nail studio in Nicosia, Cyprus specialising in acrylic, builder gel &amp; Gel-X.</p>
       <div class="footer-social">
         <a href="https://www.instagram.com/belnails.cy/" target="_blank" rel="noopener" aria-label="Bel Nails on Instagram"><svg class="icon"><use href="#icon-instagram"/></svg></a>
@@ -166,18 +197,18 @@
       <h4>Explore</h4>
       <ul>
         <li><a href="services.html">Services</a></li>
-        <li><a href="portfolio.html">Portfolio</a></li>
-        <li><a href="style-finder.html">Find Your Style</a></li>
+        <li><a href="portfolio.html">Lookbook</a></li>
+        <li><a href="style-finder.html">Design Your Set</a></li>
         <li><a href="why-bel-nails.html">Why Bel Nails</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Discover</h4>
       <ul>
-        <li><a href="about.html">About</a></li>
+        <li><a href="about.html">Studio</a></li>
         <li><a href="reviews.html">Reviews</a></li>
         <li><a href="try-on.html">Try Your Look</a></li>
-        <li><a href="instagram.html">Instagram</a></li>
+        <li><a href="collection.html">Your Collection</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -196,13 +227,30 @@
   </div>
 </footer>
 
-<!-- ============================== STICKY MOBILE BOOK BAR ============================== -->
-<div class="mobile-book-bar">
-  <a href="booking.html" class="btn btn--primary">Book Appointment</a>
-  <a href="https://www.instagram.com/belnails.cy/" target="_blank" rel="noopener" class="btn--icon" aria-label="Bel Nails on Instagram">
-    <svg class="icon"><use href="#icon-instagram"/></svg>
+<!-- ============================== MOBILE BOTTOM NAV ============================== -->
+<nav class="bottom-nav" aria-label="Mobile">
+  <a href="index.html" data-nav-page="home">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9.5a1 1 0 0 0 1 1h3.5v-6h3v6H17a1 1 0 0 0 1-1V10"/></svg>
+    <span>Home</span>
   </a>
-</div>
+  <a href="portfolio.html" data-nav-page="portfolio">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg>
+    <span>Looks</span>
+  </a>
+  <a href="style-finder.html" data-nav-page="style-finder">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9-4.9-1.6 4.9-1.6z"/></svg>
+    <span>Design</span>
+  </a>
+  <a href="booking.html" data-nav-page="booking">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg>
+    <span>Book</span>
+  </a>
+  <a href="collection.html" data-nav-page="collection">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 20.2s-7.8-4.8-10.2-9.6C.3 7.2 2.1 4 5.6 4c2 0 3.5 1 6.4 4 2.9-3 4.4-4 6.4-4 3.5 0 5.3 3.2 3.8 6.6C19.8 15.4 12 20.2 12 20.2z"/></svg>
+    <span>Saved</span>
+    <span class="bottom-nav__badge" id="bottomSavedBadge">0</span>
+  </a>
+</nav>
 
 <!-- ============================== SAVED LOOKS DRAWER ============================== -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
