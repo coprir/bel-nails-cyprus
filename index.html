@@ -442,22 +442,76 @@
     </div>
   </section>
 
-  <!-- ============================== TRY YOUR LOOK (AR prep) ============================== -->
+  <!-- ============================== TRY YOUR LOOK (live camera preview) ============================== -->
   <section class="try-on" id="try-on">
     <div class="container">
-      <div class="try-on-panel reveal">
-        <div>
-          <span class="eyebrow eyebrow--on-ink">Try Your Look</span>
-          <h2 class="section-heading section-heading--on-ink">Virtual try-on &mdash; coming soon</h2>
-          <p class="section-lede section-lede--on-ink">We're preparing a virtual try-on experience so you can preview a Bel Nails look on your own hand before booking. It isn't live yet &mdash; we'd rather build it properly than fake it.</p>
-          <div class="try-on-actions">
-            <a href="https://www.instagram.com/belnails.cy/" target="_blank" rel="noopener" class="btn btn--outline-light btn--sm">Get notified on Instagram</a>
+      <div class="section-head reveal">
+        <span class="eyebrow">Try Your Look</span>
+        <h2 class="section-heading">Preview a Bel Nails look before you book</h2>
+        <p class="section-lede">Browse designs or pick a custom colour, then use your camera for a live preview. There's no AR nail overlay yet &mdash; that's still in development, and we'd rather show you a real camera feed than fake one.</p>
+      </div>
+
+      <div class="tryon-app reveal">
+        <aside class="tryon-sidebar">
+          <div class="tryon-tabs" role="tablist">
+            <button class="tryon-tab is-active" data-tab="designs" type="button" role="tab" aria-selected="true">
+              <svg class="icon"><use href="#icon-sparkle"/></svg> Designs
+            </button>
+            <button class="tryon-tab" data-tab="custom" type="button" role="tab" aria-selected="false">
+              <svg class="icon"><use href="#icon-swirl"/></svg> Custom Colour
+            </button>
           </div>
-        </div>
-        <div class="try-on-mock" aria-hidden="true">
-          <svg class="icon"><use href="#icon-scan"/></svg>
-          <span>Upload a photo of your hand or use your camera to preview nail styles &mdash; in development</span>
-          <button class="btn btn--outline-light btn--sm btn--soon" type="button" disabled>Upload photo (coming soon)</button>
+
+          <div class="tryon-panel is-active" data-panel="designs">
+            <div class="tryon-filter-row" id="tryonFilters"></div>
+            <div class="tryon-list" id="tryonList"></div>
+          </div>
+
+          <div class="tryon-panel" data-panel="custom">
+            <span class="tryon-label">Choose your colour</span>
+            <input type="color" class="tryon-color-input" id="tryonColorPicker" value="#9c1245" aria-label="Pick a custom colour">
+            <div class="tryon-hex-row">
+              <span class="tryon-hex-swatch" id="tryonHexSwatch" style="background:#9c1245"></span>
+              <div>
+                <strong id="tryonHexValue">#9C1245</strong>
+                <span>Custom colour</span>
+              </div>
+            </div>
+            <span class="tryon-label">Quick picks</span>
+            <div class="tryon-quick-picks" id="tryonQuickPicks"></div>
+          </div>
+
+          <a href="#booking" class="btn btn--primary btn--block tryon-book-btn" id="tryonBookBtn">Book Appointment</a>
+        </aside>
+
+        <div class="tryon-stage">
+          <div class="tryon-selection-strip">
+            <strong id="tryonSelectionName">Choose a design or colour</strong>
+            <span id="tryonSelectionDesc">Pick something on the left, then enable your camera to preview it.</span>
+          </div>
+
+          <div class="tryon-camera" id="tryonCamera">
+            <video class="tryon-video" id="tryonVideo" playsinline autoplay muted hidden></video>
+            <div class="tryon-camera-empty" id="tryonCameraEmpty">
+              <svg class="icon"><use href="#icon-camera"/></svg>
+              <h3>Live camera preview</h3>
+              <p>Point your camera at your hand for a live preview alongside your selected look. No photos are saved, uploaded, or sent anywhere.</p>
+              <button class="btn btn--primary" id="tryonEnableBtn" type="button">
+                <svg class="icon"><use href="#icon-scan"/></svg> Enable Camera
+              </button>
+              <span class="tryon-camera-hint" id="tryonCameraHint">Requires camera permission &middot; AR nail overlay coming soon</span>
+            </div>
+            <button class="btn btn--outline-light btn--sm tryon-stop-btn" id="tryonStopBtn" type="button" hidden>Stop Camera</button>
+            <div class="tryon-selected-indicator" id="tryonSelectedIndicator" hidden>
+              <span class="tryon-selected-dot" id="tryonSelectedDot"></span>
+              <span>Selected colour: <strong id="tryonSelectedLabel">&mdash;</strong></span>
+            </div>
+          </div>
+
+          <div class="tryon-price-card" id="tryonPriceCard" hidden>
+            <strong id="tryonPriceLabel">Ask for pricing</strong>
+            <span id="tryonPriceMeta"></span>
+          </div>
         </div>
       </div>
     </div>

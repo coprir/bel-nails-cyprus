@@ -79,6 +79,11 @@ ul { list-style: none; margin: 0; padding: 0; }
 h1, h2, h3, h4, p { margin: 0; }
 input, textarea, select { font: inherit; color: inherit; }
 
+/* The native `hidden` attribute must always win over any class's own
+   `display` value (e.g. .btn's display:inline-flex, or a flex/grid utility) —
+   otherwise an element toggled via `el.hidden = true` stays visible. */
+[hidden] { display: none !important; }
+
 .container {
   max-width: var(--container);
   margin-inline: auto;
@@ -1517,37 +1522,269 @@ select:focus-visible {
 }
 
 /* ==========================================================================
-   Try Your Look — AR placeholder
+   Try Your Look — live camera preview (design-picker + stage app layout)
    ========================================================================== */
 
 .try-on { padding-block: clamp(4.5rem, 8vw, 7rem); }
-.try-on-panel {
-  display: grid;
-  gap: 2rem;
-  align-items: center;
-  background: var(--ink);
-  border-radius: var(--radius-lg);
-  padding: clamp(2rem, 5vw, 3.5rem);
-  color: var(--text-on-ink);
-}
-@media (min-width: 860px) { .try-on-panel { grid-template-columns: 1fr 1fr; } }
 
-.try-on-mock {
-  aspect-ratio: 4/3;
+.tryon-app {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: 0 30px 60px -40px rgba(23, 17, 15, 0.35);
+}
+@media (min-width: 900px) {
+  .tryon-app { flex-direction: row; min-height: 560px; }
+}
+
+/* Sidebar */
+.tryon-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  gap: 1.25rem;
+}
+@media (min-width: 900px) {
+  .tryon-sidebar {
+    width: 340px;
+    flex-shrink: 0;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+  }
+}
+
+.tryon-tabs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  background: var(--cream-deep);
+  border-radius: 999px;
+}
+.tryon-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  min-height: 40px;
+  transition: all var(--dur-fast) var(--ease);
+}
+.tryon-tab .icon { width: 15px; height: 15px; }
+.tryon-tab.is-active { background: var(--white); color: var(--rose); box-shadow: 0 6px 14px -8px rgba(23,17,15,0.3); }
+
+.tryon-panel { display: none; flex-direction: column; gap: 1rem; flex-grow: 1; min-height: 0; }
+.tryon-panel.is-active { display: flex; }
+
+.tryon-filter-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tryon-filter-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  min-height: 32px;
+  transition: all var(--dur-fast) var(--ease);
+}
+.tryon-filter-pill:hover { border-color: var(--rose); color: var(--rose); }
+.tryon-filter-pill.is-active { background: var(--ink); border-color: var(--ink); color: var(--white); }
+
+.tryon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  overflow-y: auto;
+  max-height: 320px;
+  padding-right: 0.25rem;
+}
+.tryon-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  border: 1.5px dashed rgba(243,233,224,0.3);
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.tryon-card:hover { border-color: var(--rose); }
+.tryon-card.is-selected { border-color: var(--rose); background: var(--blush); }
+.tryon-card__swatch {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  background: var(--blush);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--rose);
+  overflow: hidden;
+}
+.tryon-card__swatch img { width: 100%; height: 100%; object-fit: cover; }
+.tryon-card__swatch .icon { width: 18px; height: 18px; }
+.tryon-card__body { flex-grow: 1; min-width: 0; }
+.tryon-card__body strong { display: block; font-size: 0.86rem; }
+.tryon-card__body span { font-size: 0.74rem; color: var(--text-muted); }
+.tryon-card__heart {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.tryon-card__heart:hover, .tryon-card__heart.is-saved { color: var(--rose); }
+.tryon-card__heart.is-saved .icon { fill: currentColor; }
+.tryon-card__heart .icon { width: 16px; height: 16px; }
+
+.tryon-list-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.tryon-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tryon-color-input {
+  width: 100%;
+  height: 72px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  cursor: pointer;
+  background: var(--white);
+}
+
+.tryon-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+.tryon-hex-swatch { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+.tryon-hex-row strong { display: block; font-size: 0.85rem; }
+.tryon-hex-row span { font-size: 0.74rem; color: var(--text-muted); }
+
+.tryon-quick-picks { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tryon-quick-pick {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--white);
+  outline: 1px solid var(--line);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), outline-color var(--dur-fast) var(--ease);
+}
+.tryon-quick-pick:hover { transform: scale(1.1); }
+.tryon-quick-pick.is-selected { outline-color: var(--rose); outline-width: 2px; }
+
+.tryon-book-btn { margin-top: auto; }
+
+/* Stage */
+.tryon-stage { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+
+.tryon-selection-strip {
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.tryon-selection-strip strong { font-family: var(--font-serif); font-size: 1.1rem; }
+.tryon-selection-strip span { font-size: 0.85rem; color: var(--text-muted); }
+
+.tryon-camera {
+  position: relative;
+  flex-grow: 1;
+  min-height: 360px;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tryon-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tryon-camera-empty {
+  max-width: 340px;
+  text-align: center;
+  color: var(--text-on-ink);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  text-align: center;
-  padding: 2rem;
-  background: rgba(243,233,224,0.03);
+  gap: 0.5rem;
 }
-.try-on-mock .icon { width: 34px; height: 34px; color: var(--rose-bright); }
-.try-on-mock span { font-size: 0.82rem; color: var(--text-on-ink-muted); max-width: 26ch; }
-.try-on-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 1.75rem; }
+.tryon-camera-empty .icon { width: 30px; height: 30px; color: var(--rose-bright); margin-bottom: 0.5rem; }
+.tryon-camera-empty h3 { font-family: var(--font-serif); font-size: 1.3rem; }
+.tryon-camera-empty p { font-size: 0.88rem; color: var(--text-on-ink-muted); }
+.tryon-camera-empty .btn { margin-top: 0.75rem; }
+.tryon-camera-hint { font-size: 0.72rem; color: var(--text-on-ink-muted); opacity: 0.8; }
+
+.tryon-stop-btn {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  z-index: 2;
+}
+
+.tryon-selected-indicator {
+  position: absolute;
+  left: 1rem; bottom: 1rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(23, 17, 15, 0.65);
+  backdrop-filter: blur(6px);
+  color: var(--white);
+  font-size: 0.78rem;
+}
+.tryon-selected-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); }
+
+.tryon-price-card {
+  position: absolute;
+  right: 1rem; bottom: 1rem;
+  z-index: 2;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.1rem;
+  text-align: right;
+  box-shadow: 0 14px 30px -18px rgba(23,17,15,0.4);
+}
+.tryon-price-card strong { display: block; font-size: 0.92rem; color: var(--ink); }
+.tryon-price-card span { font-size: 0.72rem; color: var(--text-muted); }
 
 /* ==========================================================================
    Saved Looks drawer

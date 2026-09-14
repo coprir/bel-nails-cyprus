@@ -796,6 +796,241 @@
   }
 
   /* ==========================================================================
+     TRY YOUR LOOK — design picker + live camera preview
+     ----------------------------------------------------------------------
+     No AR nail overlay: that would require real hand-tracking/segmentation,
+     which isn't something to fake. This gives a genuine live camera feed
+     (nothing recorded, uploaded or sent anywhere) alongside a selected
+     design or custom colour, so the pattern is real end-to-end.
+     ========================================================================== */
+
+  var TRYON_STYLE_FILTERS = [{ value: 'all', label: 'All' }].concat(FACETS[0].options);
+  var tryonActiveFilter = 'all';
+  var tryonSelection = null; // { kind: 'item', item } | { kind: 'color', hex, label }
+  var tryonStream = null;
+
+  function buildTryOnFilters() {
+    var row = document.getElementById('tryonFilters');
+    TRYON_STYLE_FILTERS.forEach(function (opt) {
+      var pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = 'tryon-filter-pill' + (opt.value === 'all' ? ' is-active' : '');
+      pill.textContent = opt.label;
+      pill.addEventListener('click', function () {
+        tryonActiveFilter = opt.value;
+        row.querySelectorAll('.tryon-filter-pill').forEach(function (p) { p.classList.remove('is-active'); });
+        pill.classList.add('is-active');
+        renderTryonList();
+      });
+      row.appendChild(pill);
+    });
+  }
+
+  function renderTryonList() {
+    var list = document.getElementById('tryonList');
+    var items = portfolioItems.filter(function (item) {
+      return tryonActiveFilter === 'all' || (item.style || []).indexOf(tryonActiveFilter) > -1;
+    });
+    list.innerHTML = '';
+
+    if (!items.length) {
+      var empty = document.createElement('div');
+      empty.className = 'tryon-list-empty';
+      empty.innerHTML = portfolioItems.length
+        ? "No designs tagged “" + labelFor(TRYON_STYLE_FILTERS, tryonActiveFilter) + "” yet."
+        : 'Designs will appear here once Bel Nails photography is added — use Custom Colour in the meantime.';
+      list.appendChild(empty);
+      return;
+    }
+
+    items.forEach(function (item) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'tryon-card';
+      var swatchColor = COLOR_HEX[(item.color || [])[0]] || 'var(--blush)';
+      card.innerHTML =
+        '<span class="tryon-card__swatch" style="background:' + (item.src ? '' : swatchColor) + '">' +
+        (item.src ? '<img src="' + item.src + '" alt="">' : iconSvg('icon-sparkle')) + '</span>' +
+        '<span class="tryon-card__body"><strong>' + (labelFor(FACETS[0].options, (item.style || [])[0]) || 'Design') +
+        '</strong><span>' + (item.priceLabel || 'Ask for pricing') + '</span></span>' +
+        '<span class="tryon-card__heart' + (isSaved(item.id) ? ' is-saved' : '') + '" role="button" aria-label="Save this design">' + iconSvg('icon-heart') + '</span>';
+
+      card.querySelector('.tryon-card__heart').addEventListener('click', function (e) {
+        e.stopPropagation();
+        var saved = toggleSaved(lookFromItem(item));
+        e.currentTarget.classList.toggle('is-saved', saved);
+      });
+      card.addEventListener('click', function () { selectTryonItem(item, card); });
+      list.appendChild(card);
+    });
+  }
+
+  function clearTryonSelectionStyles() {
+    document.querySelectorAll('.tryon-card.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+    document.querySelectorAll('.tryon-quick-pick.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+  }
+
+  function selectTryonItem(item, cardEl) {
+    clearTryonSelectionStyles();
+    if (cardEl) cardEl.classList.add('is-selected');
+    tryonSelection = { kind: 'item', item: item };
+
+    var name = labelFor(FACETS[0].options, (item.style || [])[0]) || 'Bel Nails design';
+    document.getElementById('tryonSelectionName').textContent = name;
+    document.getElementById('tryonSelectionDesc').textContent =
+      [labelFor(SHAPE_OPTIONS, item.shape), labelFor(FINISH_OPTIONS, item.finish)].filter(Boolean).join(' · ') || 'Selected from the Bel Nails portfolio.';
+
+    var dotColor = COLOR_HEX[(item.color || [])[0]] || '#9c1245';
+    updateTryonIndicator(dotColor, name);
+    updateTryonPrice(item.priceLabel || 'Ask for pricing', item.service || '');
+  }
+
+  function selectTryonColor(hex, label, pickEl) {
+    clearTryonSelectionStyles();
+    if (pickEl) pickEl.classList.add('is-selected');
+    tryonSelection = { kind: 'color', hex: hex, label: label };
+
+    document.getElementById('tryonSelectionName').textContent = label + ' — custom colour';
+    document.getElementById('tryonSelectionDesc').textContent = 'Your own colour choice, previewed live on camera.';
+    updateTryonIndicator(hex, label);
+    updateTryonPrice('Ask for pricing', 'Colour match in studio');
+  }
+
+  function updateTryonIndicator(color, label) {
+    var indicator = document.getElementById('tryonSelectedIndicator');
+    document.getElementById('tryonSelectedDot').style.background = color;
+    document.getElementById('tryonSelectedLabel').textContent = label;
+    indicator.hidden = false;
+  }
+
+  function updateTryonPrice(price, meta) {
+    var card = document.getElementById('tryonPriceCard');
+    document.getElementById('tryonPriceLabel').textContent = price;
+    document.getElementById('tryonPriceMeta').textContent = meta;
+    card.hidden = false;
+  }
+
+  function initTryOnTabs() {
+    document.querySelectorAll('.tryon-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tryon-tab').forEach(function (t) {
+          t.classList.remove('is-active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('is-active');
+        tab.setAttribute('aria-selected', 'true');
+        document.querySelectorAll('.tryon-panel').forEach(function (p) {
+          p.classList.toggle('is-active', p.dataset.panel === tab.dataset.tab);
+        });
+      });
+    });
+  }
+
+  function initTryOnCustomColor() {
+    var picker = document.getElementById('tryonColorPicker');
+    var hexSwatch = document.getElementById('tryonHexSwatch');
+    var hexValue = document.getElementById('tryonHexValue');
+    var picksRow = document.getElementById('tryonQuickPicks');
+
+    function applyHex(hex) {
+      hexSwatch.style.background = hex;
+      hexValue.textContent = hex.toUpperCase();
+    }
+
+    picker.addEventListener('input', function () {
+      applyHex(picker.value);
+      selectTryonColor(picker.value, 'Custom colour');
+    });
+
+    COLOR_OPTIONS.forEach(function (opt) {
+      var hex = COLOR_HEX[opt.value];
+      var pick = document.createElement('button');
+      pick.type = 'button';
+      pick.className = 'tryon-quick-pick';
+      pick.style.background = hex;
+      pick.setAttribute('aria-label', opt.label);
+      pick.title = opt.label;
+      pick.addEventListener('click', function () {
+        applyHex(/^#/.test(hex) ? hex : picker.value);
+        if (/^#/.test(hex)) picker.value = hex;
+        selectTryonColor(hex, opt.label, pick);
+      });
+      picksRow.appendChild(pick);
+    });
+  }
+
+  function initTryOnCamera() {
+    var video = document.getElementById('tryonVideo');
+    var emptyState = document.getElementById('tryonCameraEmpty');
+    var enableBtn = document.getElementById('tryonEnableBtn');
+    var stopBtn = document.getElementById('tryonStopBtn');
+    var hint = document.getElementById('tryonCameraHint');
+
+    enableBtn.addEventListener('click', function () {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        hint.textContent = "Your browser doesn't support camera access here.";
+        return;
+      }
+      enableBtn.disabled = true;
+      enableBtn.textContent = 'Requesting camera…';
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(function (stream) {
+          tryonStream = stream;
+          video.srcObject = stream;
+          video.hidden = false;
+          emptyState.hidden = true;
+          stopBtn.hidden = false;
+        })
+        .catch(function () {
+          enableBtn.disabled = false;
+          enableBtn.innerHTML = iconSvg('icon-scan') + ' Enable Camera';
+          hint.textContent = 'Camera access was blocked or unavailable — you can still browse designs and book without it.';
+        });
+    });
+
+    stopBtn.addEventListener('click', function () {
+      if (tryonStream) tryonStream.getTracks().forEach(function (t) { t.stop(); });
+      tryonStream = null;
+      video.hidden = true;
+      video.srcObject = null;
+      stopBtn.hidden = true;
+      emptyState.hidden = false;
+      enableBtn.disabled = false;
+      enableBtn.innerHTML = iconSvg('icon-scan') + ' Enable Camera';
+      hint.textContent = 'Requires camera permission · AR nail overlay coming soon';
+    });
+  }
+
+  function initTryOnBooking() {
+    document.getElementById('tryonBookBtn').addEventListener('click', function (e) {
+      if (!tryonSelection) return; // let the default #booking anchor handle it
+      e.preventDefault();
+      if (tryonSelection.kind === 'item') {
+        handoffAndBook(lookFromItem(tryonSelection.item));
+      } else {
+        handoffAndBook({
+          id: 'custom-color-' + Date.now(),
+          type: 'quiz',
+          title: tryonSelection.label + ' (custom colour)',
+          img: null,
+          meta: { color: tryonSelection.hex },
+          service: null,
+          ts: Date.now()
+        });
+      }
+    });
+  }
+
+  function initTryOn() {
+    buildTryOnFilters();
+    renderTryonList();
+    initTryOnTabs();
+    initTryOnCustomColor();
+    initTryOnCamera();
+    initTryOnBooking();
+  }
+
+  /* ==========================================================================
      INIT
      ========================================================================== */
 
@@ -812,6 +1047,7 @@
     document.getElementById('clearFiltersBtn').addEventListener('click', clearFacets);
 
     buildConfigurator();
+    initTryOn();
 
     initBooking();
     initDrawer();
