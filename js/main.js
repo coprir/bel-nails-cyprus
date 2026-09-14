@@ -240,6 +240,13 @@
         toggle.setAttribute('aria-expanded', 'false');
       });
     });
+
+    var page = document.body.dataset.page;
+    if (page) {
+      document.querySelectorAll('[data-nav-page="' + page + '"]').forEach(function (a) {
+        a.classList.add('is-active');
+      });
+    }
   }
 
   /* ==========================================================================
@@ -319,6 +326,7 @@
 
   function renderPortfolioGrid() {
     var grid = document.getElementById('portfolioGrid');
+    if (!grid) return;
     var items = portfolioItems.filter(matchesFilters);
     currentGridItems = items;
     grid.innerHTML = '';
@@ -402,6 +410,7 @@
 
   function initInspire() {
     var btn = document.getElementById('inspireBtn');
+    if (!btn) return;
     var panel = document.getElementById('inspirePanel');
     var title = document.getElementById('inspireTitle');
     var body = document.getElementById('inspireBody');
@@ -417,12 +426,13 @@
         title.textContent = 'This could be your next set.';
         body.textContent = (labelFor(FACETS[0].options, (pick.style || [])[0]) || 'This design') +
           ' — ' + (pick.priceLabel || 'ask for pricing') + '.';
-        bookBtn.onclick = function () { handoffAndBook(lookFromItem(pick)); };
+        bookBtn.onclick = function (e) { e.preventDefault(); handoffAndBook(lookFromItem(pick)); };
       } else {
         title.textContent = "We're still building the portfolio.";
-        body.textContent = "There isn't a photographed design to show yet — follow @belnails.cy on Instagram for the newest work, or use Find Your Style below to describe what you're after.";
-        bookBtn.onclick = function () {
-          document.getElementById('style-finder').scrollIntoView({ behavior: 'smooth' });
+        body.textContent = "There isn't a photographed design to show yet — follow @belnails.cy on Instagram for the newest work, or use Find Your Style to describe what you're after.";
+        bookBtn.onclick = function (e) {
+          e.preventDefault();
+          window.location.href = 'style-finder.html';
         };
       }
       panel.classList.add('is-visible');
@@ -479,6 +489,7 @@
   }
 
   function initViewer() {
+    if (!document.getElementById('viewer')) return;
     document.getElementById('viewerClose').addEventListener('click', closeViewer);
     document.getElementById('viewerPrev').addEventListener('click', function () { stepViewer(-1); });
     document.getElementById('viewerNext').addEventListener('click', function () { stepViewer(1); });
@@ -530,8 +541,8 @@
   }
 
   function buildConfigurator() {
-    // progress segments
     var progress = document.getElementById('configuratorProgress');
+    if (!progress) return;
     QUIZ_STEPS.forEach(function (s, i) {
       var seg = document.createElement('div');
       seg.className = 'configurator-progress__seg';
@@ -627,6 +638,8 @@
       .slice(0, 6)
       .map(function (r) { return r.item; });
 
+    currentGridItems = ranked;
+
     if (!ranked.length) {
       var empty = document.createElement('div');
       empty.className = 'portfolio-empty';
@@ -675,24 +688,43 @@
       .map(function (k) { return look.meta[k]; }).join(' · ');
   }
 
-  function handoffAndBook(look) {
-    setHandoff(look);
-    if (look.service) {
-      var select = document.getElementById('bkService');
+  /* handoffAndBook is called from portfolio.html, style-finder.html,
+     try-on.html and the saved-looks drawer (any page), as well as from
+     booking.html itself. It always stores the look in sessionStorage; if
+     the booking form isn't on the current page it navigates to
+     booking.html, which reads the handoff back out on load. */
+  /* Pre-fills the booking form's service select + message from a handed-off
+     look. Called both right after handoffAndBook on booking.html itself,
+     and on booking.html's own page load (after a cross-page handoff, the
+     form doesn't exist yet at the moment handoffAndBook ran). */
+  function applyHandoffToForm(look) {
+    var select = document.getElementById('bkService');
+    if (select && look.service) {
       var opt = Array.prototype.find.call(select.options, function (o) { return o.value === look.service; });
       if (opt) select.value = look.service;
     }
     var message = document.getElementById('bkMessage');
     var summary = metaSummary(look);
-    if (summary && message && !message.value) {
+    if (message && summary && !message.value) {
       message.value = 'I’d like to book this look: ' + look.title + (summary ? ' (' + summary + ')' : '');
     }
+  }
+
+  function handoffAndBook(look) {
+    setHandoff(look);
+    var form = document.getElementById('bookingForm');
+    if (!form) {
+      window.location.href = 'booking.html';
+      return;
+    }
+    applyHandoffToForm(look);
     document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
   }
 
   function renderBookingLookCard() {
-    var look = getHandoff();
     var card = document.getElementById('bookingLookCard');
+    if (!card) return;
+    var look = getHandoff();
     if (!look) { card.classList.remove('is-visible'); return; }
     document.getElementById('bookingLookSummary').textContent = look.title + (metaSummary(look) ? ' — ' + metaSummary(look) : '');
     card.classList.add('is-visible');
@@ -700,18 +732,35 @@
 
   function initBooking() {
     renderBookingLookCard();
-    document.getElementById('bookingLookClear').addEventListener('click', clearHandoff);
+    var clearBtn = document.getElementById('bookingLookClear');
+    if (clearBtn) clearBtn.addEventListener('click', clearHandoff);
 
+    var existingHandoff = getHandoff();
+    if (existingHandoff) applyHandoffToForm(existingHandoff);
+
+    /* .book-service-btn lives on services.html, a different page from the
+       booking form — always hand off through handoffAndBook rather than
+       touching #bkService directly. */
     document.querySelectorAll('.book-service-btn').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
-        var select = document.getElementById('bkService');
+        e.preventDefault();
         var map = { acrylic: 'Acrylic', 'builder-gel': 'Builder Gel', 'gel-x': 'Gel-X' };
-        var val = map[btn.dataset.service];
-        if (val) select.value = val;
+        var label = map[btn.dataset.service] || null;
+        handoffAndBook({
+          id: 'service-' + btn.dataset.service,
+          type: 'service',
+          title: (label || 'Service') + ' enquiry',
+          img: null,
+          meta: {},
+          service: label,
+          ts: Date.now()
+        });
       });
     });
 
-    document.getElementById('bookingForm').addEventListener('submit', function (e) {
+    var form = document.getElementById('bookingForm');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target;
       var look = getHandoff();
@@ -1003,7 +1052,7 @@
 
   function initTryOnBooking() {
     document.getElementById('tryonBookBtn').addEventListener('click', function (e) {
-      if (!tryonSelection) return; // let the default #booking anchor handle it
+      if (!tryonSelection) return; // let the default booking.html anchor handle it
       e.preventDefault();
       if (tryonSelection.kind === 'item') {
         handoffAndBook(lookFromItem(tryonSelection.item));
@@ -1022,6 +1071,7 @@
   }
 
   function initTryOn() {
+    if (!document.getElementById('tryonFilters')) return;
     buildTryOnFilters();
     renderTryonList();
     initTryOnTabs();
@@ -1035,7 +1085,8 @@
      ========================================================================== */
 
   document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('footerYear').textContent = new Date().getFullYear();
+    var footerYear = document.getElementById('footerYear');
+    if (footerYear) footerYear.textContent = new Date().getFullYear();
 
     initHeader();
     initReveal();
@@ -1044,7 +1095,8 @@
     renderPortfolioGrid();
     initInspire();
     initViewer();
-    document.getElementById('clearFiltersBtn').addEventListener('click', clearFacets);
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFacets);
 
     buildConfigurator();
     initTryOn();

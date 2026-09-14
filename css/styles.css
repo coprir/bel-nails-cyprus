@@ -254,6 +254,11 @@ select:focus-visible {
   height: 76px;
 }
 
+/* Every page's <main> sits directly under the fixed 76px header — this is
+   the one shared clearance rule instead of a per-page inline padding hack.
+   .hero supplies its own (smaller) top padding on top of this. */
+#main { padding-top: 76px; }
+
 .brand {
   display: flex;
   align-items: baseline;
@@ -301,6 +306,9 @@ select:focus-visible {
   transition: transform var(--dur-fast) var(--ease);
 }
 .nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a.is-active { color: var(--rose); }
+.nav-links a.is-active::after { transform: scaleX(1); }
+.mobile-menu a.is-active { color: var(--rose); }
 
 @media (min-width: 1040px) {
   .nav-links { display: flex; }
@@ -349,7 +357,7 @@ select:focus-visible {
 .hero {
   background: var(--ink);
   color: var(--text-on-ink);
-  padding-top: calc(76px + clamp(2.5rem, 7vw, 5rem));
+  padding-top: clamp(2.5rem, 7vw, 5rem);
   padding-bottom: clamp(3rem, 7vw, 5rem);
   overflow: hidden;
 }

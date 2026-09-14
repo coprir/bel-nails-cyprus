@@ -3,58 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bel Nails Cyprus | Acrylic, Builder Gel &amp; Gel-X Nails in Nicosia</title>
-<meta name="description" content="Bel Nails is a nail studio in Nicosia, Cyprus specialising in acrylic, builder gel and Gel-X. Discover your nail style, browse the portfolio and book your appointment.">
-<meta name="keywords" content="Bel Nails Cyprus, nail technician Cyprus, nails Nicosia, gel nails Cyprus, nail art Cyprus, builder gel Cyprus, acrylic nails Nicosia, Gel-X Cyprus">
-<link rel="canonical" href="https://belnails.cy/">
+<title>Find Your Nail Style | Bel Nails Cyprus</title>
+<meta name="description" content="Answer six quick questions to design your next Bel Nails look — shape, length, finish, colour and nail art — then save it or book it directly.">
+<meta name="keywords" content="nail style quiz, Bel Nails Cyprus, nail shape finder, nail design Nicosia">
+<link rel="canonical" href="https://belnails.cy/style-finder.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bel Nails Cyprus">
-<meta property="og:title" content="Bel Nails Cyprus | Acrylic, Builder Gel & Gel-X Nails in Nicosia">
-<meta property="og:description" content="Nail studio in Nicosia, Cyprus specialising in acrylic, builder gel and Gel-X. Find your nail style and book your appointment.">
-<meta property="og:url" content="https://belnails.cy/">
+<meta property="og:title" content="Find Your Nail Style | Bel Nails Cyprus">
+<meta property="og:description" content="A six-step nail style configurator from Bel Nails, Nicosia, Cyprus.">
+<meta property="og:url" content="https://belnails.cy/style-finder.html">
 <meta property="og:locale" content="en_CY">
-<!-- PLACEHOLDER: add og:image (1200x630) once real studio/portfolio photography is available -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Bel Nails Cyprus | Acrylic, Builder Gel & Gel-X Nails in Nicosia">
-<meta name="twitter:description" content="Nail studio in Nicosia, Cyprus specialising in acrylic, builder gel and Gel-X.">
+<meta name="twitter:title" content="Find Your Nail Style | Bel Nails Cyprus">
+<meta name="twitter:description" content="A six-step nail style configurator from Bel Nails, Nicosia, Cyprus.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/styles.css">
-
-<!--
-  ============================================================================
-  CONTENT KEY — read before editing
-  ============================================================================
-  VERIFIED  — confirmed from https://www.instagram.com/belnails.cy/ on 2026-09-14:
-              business name "Bel Nails", handle @belnails.cy, Nicosia/Cyprus,
-              services Acrylic / Builder Gel / Gel-X, "appointments opening soon".
-  NEEDS OWNER INPUT — marked visually with dashed borders / italic placeholder
-              text ("[Add ...]") throughout: address, hours, phone, WhatsApp,
-              email, pricing, durations, owner bio/photo, certifications,
-              reviews, portfolio photography.
-  PLACEHOLDER DATA — the nail-style configurator, portfolio grid and wishlist
-              are fully functional but read from an empty `portfolioItems`
-              array in js/main.js until real, tagged photography is added.
-              See README.md for the exact steps.
-  MULTI-PAGE  — this site is a set of separate static pages (see README.md
-              "Pages" section) sharing css/styles.css and js/main.js. Every
-              page repeats the same header/footer/icon-sprite/drawer markup
-              — there's no templating step, so edit shared chrome in every
-              file when it changes.
-  ============================================================================
--->
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "NailSalon",
-  "name": "Bel Nails",
-  "url": "https://belnails.cy/",
-  "areaServed": "Nicosia, Cyprus",
-  "sameAs": ["https://www.instagram.com/belnails.cy/"]
-}
-</script>
 </head>
-<body data-page="home">
+<body data-page="style-finder">
 <a class="skip-link" href="#main">Skip to content</a>
 
 <!-- ============================== ICON SPRITE ============================== -->
@@ -134,50 +99,89 @@
 
 <main id="main">
 
-  <!-- ============================== HERO ============================== -->
-  <section class="hero" id="home">
-    <div class="container hero-grid">
-      <div class="reveal">
-        <span class="hero-badge"><span class="dot"></span> Appointments opening soon</span>
-        <h1 class="hero-title">Bel Nails</h1>
-        <p class="hero-tagline">Nail artistry, crafted for you.</p>
-        <p class="hero-facts">Acrylic &middot; Builder Gel &middot; Gel-X &mdash; Nicosia, Cyprus</p>
-        <div class="hero-ctas">
-          <a href="booking.html" class="btn btn--primary">Book Your Appointment</a>
-          <a href="portfolio.html" class="btn btn--outline-light">View Our Work</a>
+  <!-- ============================== FIND YOUR NAIL STYLE ============================== -->
+  <section class="configurator" id="style-finder">
+    <div class="container">
+      <div class="section-head section-head--center reveal">
+        <span class="eyebrow">Find Your Nail Style</span>
+        <h2 class="section-heading">Design your next set, step by step</h2>
+        <p class="section-lede" style="margin-inline:auto">Answer six quick questions and we'll put together your Bel Nails look &mdash; save it, or take it straight into booking.</p>
+      </div>
+
+      <div class="configurator-shell reveal">
+        <div class="configurator-progress" id="configuratorProgress"></div>
+
+        <div class="configurator-body">
+
+          <!-- Step 1: Mood -->
+          <div class="configurator-step is-active" data-step="mood">
+            <span class="configurator-eyebrow">Step 1 of 6</span>
+            <h3 class="configurator-title">What's your nail mood?</h3>
+            <p class="configurator-subtitle">Pick the vibe you're drawn to today.</p>
+            <div class="option-grid option-grid--5" data-options="mood">
+              <!-- injected -->
+            </div>
+          </div>
+
+          <!-- Step 2: Shape -->
+          <div class="configurator-step" data-step="shape">
+            <span class="configurator-eyebrow">Step 2 of 6</span>
+            <h3 class="configurator-title">Choose your shape</h3>
+            <p class="configurator-subtitle">Every shape changes the whole look of a set.</p>
+            <div class="option-grid" data-options="shape"></div>
+          </div>
+
+          <!-- Step 3: Length -->
+          <div class="configurator-step" data-step="length">
+            <span class="configurator-eyebrow">Step 3 of 6</span>
+            <h3 class="configurator-title">How long are we going?</h3>
+            <p class="configurator-subtitle">From barely-there to statement length.</p>
+            <div class="option-grid" data-options="length"></div>
+          </div>
+
+          <!-- Step 4: Finish -->
+          <div class="configurator-step" data-step="finish">
+            <span class="configurator-eyebrow">Step 4 of 6</span>
+            <h3 class="configurator-title">Choose your finish</h3>
+            <p class="configurator-subtitle">The finish sets the whole mood of the set.</p>
+            <div class="option-grid" data-options="finish"></div>
+          </div>
+
+          <!-- Step 5: Color -->
+          <div class="configurator-step" data-step="color">
+            <span class="configurator-eyebrow">Step 5 of 6</span>
+            <h3 class="configurator-title">Pick your colour mood</h3>
+            <p class="configurator-subtitle">Trust your first instinct.</p>
+            <div class="option-grid" data-options="color"></div>
+          </div>
+
+          <!-- Step 6: Art style -->
+          <div class="configurator-step" data-step="artStyle">
+            <span class="configurator-eyebrow">Step 6 of 6</span>
+            <h3 class="configurator-title">Nail art style</h3>
+            <p class="configurator-subtitle">Add detail, or keep it clean &mdash; your call.</p>
+            <div class="option-grid" data-options="artStyle"></div>
+          </div>
+
+          <!-- Result -->
+          <div class="configurator-step" data-step="result">
+            <span class="configurator-eyebrow">Your Bel Nails Look</span>
+            <h3 class="configurator-title">Here's what we'd recommend</h3>
+            <div class="result-summary" id="resultSummary"></div>
+            <div class="result-grid" id="resultGrid"></div>
+            <div class="result-actions">
+              <button class="btn btn--primary" id="saveLookBtn" type="button">Save This Look</button>
+              <button class="btn btn--outline-ink" id="bookLookBtn" type="button">Book This Look</button>
+              <button class="btn btn--ghost" id="restartQuizBtn" type="button">Start over <svg class="icon"><use href="#icon-arrow-right"/></svg></button>
+            </div>
+          </div>
+
+          <div class="configurator-nav" id="configuratorNav">
+            <span class="btn--back" id="configuratorBack">&larr; Back</span>
+            <span></span>
+          </div>
         </div>
       </div>
-      <div class="hero-visual reveal" aria-hidden="true">
-        <svg viewBox="0 0 200 200" fill="none" stroke="#f4d9c9" stroke-width="1.2">
-          <path d="M100 30c-16 0-24 20-24 46 0 30 10 62 24 88 14-26 24-58 24-88 0-26-8-46-24-46z"/>
-          <path d="M76 76c-24 6-40 24-44 46M124 76c24 6 40 24 44 46" stroke-opacity="0.6"/>
-        </svg>
-        <span class="hero-visual-caption"><!-- PLACEHOLDER --> Studio photography coming soon</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="value-strip">
-    <div class="container value-strip-grid">
-      <div class="value-item reveal">
-        <h3>Beautiful nails.</h3>
-        <p>Every set is shaped and finished with care, from base to top coat.</p>
-      </div>
-      <div class="value-item reveal">
-        <h3>Attention to detail.</h3>
-        <p>Clean lines, balanced shapes, and a finish built to last.</p>
-      </div>
-      <div class="value-item reveal">
-        <h3>An experience made for you.</h3>
-        <p>Every appointment starts with a conversation about what you want.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================== INTRO ============================== -->
-  <section class="intro">
-    <div class="container intro-inner reveal">
-      <p>Bel Nails is a nail studio based in Nicosia, Cyprus, specialising in acrylic, builder gel and Gel-X &mdash; built around precision, creativity, and a personal touch for every client.</p>
     </div>
   </section>
 
@@ -233,6 +237,34 @@
   <a href="https://www.instagram.com/belnails.cy/" target="_blank" rel="noopener" class="btn--icon" aria-label="Bel Nails on Instagram">
     <svg class="icon"><use href="#icon-instagram"/></svg>
   </a>
+</div>
+
+<!-- ============================== LIGHTBOX / VIEWER ============================== -->
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Design viewer">
+  <div class="viewer-top">
+    <button class="viewer-nav" id="viewerPrev" aria-label="Previous design"><svg class="icon"><use href="#icon-chevron-left"/></svg></button>
+    <button class="viewer-close" id="viewerClose" aria-label="Close"><svg class="icon"><use href="#icon-close"/></svg></button>
+    <button class="viewer-nav" id="viewerNext" aria-label="Next design"><svg class="icon"><use href="#icon-chevron-right"/></svg></button>
+  </div>
+  <div class="viewer-body">
+    <div class="viewer-stage">
+      <div class="viewer-image" id="viewerImage"><svg class="icon" viewBox="0 0 24 24" style="width:40px;height:40px"><use href="#icon-camera"/></svg></div>
+      <div class="viewer-meta">
+        <span class="eyebrow eyebrow--on-ink" id="viewerEyebrow">Design</span>
+        <h3 id="viewerTitle">Photo coming soon</h3>
+        <dl>
+          <dt>Style</dt><dd id="viewerStyle">&mdash;</dd>
+          <dt>Shape</dt><dd id="viewerShape">&mdash;</dd>
+          <dt>Finish</dt><dd id="viewerFinish">&mdash;</dd>
+          <dt>Colour</dt><dd id="viewerColor">&mdash;</dd>
+          <dt>Service</dt><dd id="viewerService">&mdash;</dd>
+          <dt>Price</dt><dd id="viewerPrice">Ask for pricing</dd>
+        </dl>
+        <button class="btn btn--primary btn--sm" id="viewerBookBtn">Book This Look</button>
+      </div>
+    </div>
+  </div>
+  <p class="viewer-swipe-hint">Swipe or use arrow keys to browse</p>
 </div>
 
 <!-- ============================== SAVED LOOKS DRAWER ============================== -->
