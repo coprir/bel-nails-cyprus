@@ -163,21 +163,123 @@ about.html, reviews.html, try-on.html, booking.html, instagram.html, contact.htm
                    one page each — see "Pages" above
 css/styles.css     design tokens (colors/type/spacing) + all component styles
 js/main.js         portfolio data, quiz logic, filters, wishlist, viewer, booking handoff
+admin/             the staff admin panel (Master/Deputy) — see "Admin system" below
+api/               Vercel Serverless Functions backing the admin panel
+db/schema.sql      Postgres schema for the admin panel
+scripts/init-master.mjs   one-time Master Admin bootstrap script (local only)
 ```
 
-No build tooling, no dependencies. Fonts (Playfair Display + Inter) load from
-Google Fonts; everything else is self-contained.
+The public site itself (everything above `admin/`) has no build tooling and no
+dependencies — Fonts (Playfair Display + Inter) load from Google Fonts, everything
+else is self-contained. The admin panel is the one part of this repo with real
+dependencies (`package.json`) and a real backend, described below.
 
-## Local preview
+## Local preview (public site only)
 
 ```bash
 python -m http.server 5173
 ```
 then open `http://localhost:5173`. (Opening any page directly as a `file://` URL
-also works, but a local server is more representative of production.)
+also works, but a local server is more representative of production.) This does
+**not** serve the `/api` routes — for those, use `vercel dev` as described below.
+
+## Admin system (Master / Deputy)
+
+`/admin` is a separate, password-protected staff panel for managing the portfolio
+(including Instagram imports), site settings, and other admin accounts. It's built
+as Vercel Serverless Functions (`api/`) backed by Postgres, with real bcrypt password
+hashing and server-side session cookies — there is no client-side-only "fake login."
+Every role check happens on the server, not just by hiding buttons.
+
+**Roles:**
+- **MASTER** — full control: create/disable/delete Deputy (and additional Master)
+  accounts, reset their passwords, approve/reject Deputy-submitted designs, change
+  the approval-required setting, view the activity log, delete portfolio items.
+- **DEPUTY** — manage their own portfolio items (add/edit/import from Instagram,
+  submit for publish), view (but not edit) services/settings. Cannot reach any
+  Master-only page or endpoint, even by calling the API URL directly.
+
+### One-time setup
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Provision a Postgres database.** The easiest path is Vercel's own Postgres
+   integration (Neon under the hood): in the Vercel dashboard, open this project →
+   **Storage** → **Create Database** → Postgres, and connect it to the project.
+   This automatically sets a `POSTGRES_URL` env var on the project. (Any other
+   Postgres host works too — just set `POSTGRES_URL` or `DATABASE_URL` yourself.)
+
+3. **Provision Vercel Blob** (for portfolio image uploads): **Storage** →
+   **Create Database** → Blob, connect it to the project. This sets
+   `BLOB_READ_WRITE_TOKEN` automatically.
+
+4. **Pull the real env vars down locally:**
+   ```bash
+   vercel link
+   vercel env pull .env.development.local
+   ```
+
+5. **Set the Master Admin bootstrap variables.** Add these in the Vercel project's
+   **Environment Variables** settings (Production **and** Preview/Development as
+   needed), then re-run `vercel env pull` — or, for local-only testing, add them
+   directly to `.env.development.local`:
+   ```
+   MASTER_ADMIN_EMAIL=<a real email address you control>
+   MASTER_ADMIN_PASSWORD=<a real, strong password — 12+ characters>
+   MASTER_ADMIN_NAME=<your name>
+   ```
+   **Never** commit these to git or hardcode them anywhere in the app — `.env*`
+   files are already git-ignored. `scripts/init-master.mjs` refuses to run if it
+   sees the placeholder values from `.env.example`.
+
+6. **Apply the database schema.** Run the contents of `db/schema.sql` against your
+   database once — e.g. via the Vercel/Neon dashboard's SQL editor, or:
+   ```bash
+   psql "$POSTGRES_URL" -f db/schema.sql
+   ```
+
+7. **Create the Master Admin account:**
+   ```bash
+   npm run init-master
+   ```
+   This is idempotent — if a Master already exists, it does nothing. It hashes the
+   password with bcrypt before storing it; the plaintext password is never written
+   to the database, logged, or exposed through any API. The account is created with
+   `must_change_password = true`, so the first login forces a password change.
+
+8. **Run it locally:**
+   ```bash
+   vercel dev
+   ```
+   then open `http://localhost:3000/admin/login.html` and log in with the
+   `MASTER_ADMIN_EMAIL` / `MASTER_ADMIN_PASSWORD` you set. You'll be prompted to
+   change the password immediately — do that before using the account for
+   anything real, especially if that password ever touched a shared terminal
+   or chat log.
+
+If `POSTGRES_URL` isn't set, every `/api/*` route responds with a clean
+`{"error": "Something went wrong..."}` (logged server-side as "Database is not
+configured") instead of crashing — so the public site and the admin *pages*
+still load fine even before the database is provisioned.
+
+### What's deliberately not built yet (Phase 2/3)
+
+Scoped out for now, per the agreed "core first" build order — the dashboard says
+so explicitly rather than hiding the gap:
+- Customers, appointments, services/pricing editing, promotions, reviews management
+- Real Instagram OAuth import (for now: paste a post URL and upload the image
+  manually — no scraping, no password login, no undocumented APIs)
+- Analytics, 2FA, a dedicated Security Center, CSV/data exports
 
 ## Deployment
 
-Any static host works as-is: Vercel, Netlify, GitHub Pages, Cloudflare Pages.
-Drag-and-drop the folder, or point the host at this directory — no build command
-needed.
+The public site works as a static deploy anywhere (Vercel, Netlify, GitHub Pages,
+Cloudflare Pages) with no build command. The admin system additionally needs
+Vercel (for Serverless Functions) plus the Postgres/Blob setup above:
+
+```bash
+vercel --prod
+```

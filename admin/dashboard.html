@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | Bel Nails Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin" data-page="dashboard">
+
+<div id="pageContent" hidden>
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="panel" id="masterOnlyApprovals" hidden>
+    <div class="panel__head">
+      <h2>Pending Master Approval</h2>
+      <a href="portfolio.html?status=pending_approval" class="btn btn--ghost">View all &rarr;</a>
+    </div>
+    <div id="approvalsList"></div>
+  </div>
+
+  <div class="panel" id="recentPortfolioPanel">
+    <div class="panel__head">
+      <h2>Recent Portfolio Activity</h2>
+      <a href="portfolio.html" class="btn btn--ghost">View all &rarr;</a>
+    </div>
+    <div id="recentPortfolioList"></div>
+  </div>
+
+  <div class="panel" id="deputyQuickActions" hidden>
+    <div class="panel__head"><h2>Quick Actions</h2></div>
+    <div class="quick-actions">
+      <a href="portfolio.html?action=import" class="btn btn--outline-ink btn--sm">Import from Instagram</a>
+      <a href="portfolio.html?action=add" class="btn btn--outline-ink btn--sm">Add Design</a>
+      <a href="portfolio.html" class="btn btn--outline-ink btn--sm">View Portfolio</a>
+      <a href="profile.html" class="btn btn--outline-ink btn--sm">My Profile</a>
+    </div>
+  </div>
+
+  <div class="panel" id="phase2Notice">
+    <div class="panel__head"><h2>Coming in Phase 2</h2></div>
+    <p class="text-sm muted">
+      Appointments, Customers, Services &amp; Pricing, Promotions and Reviews management are the
+      next phase of this admin system. Real Instagram OAuth import (vs. the manual add-by-URL flow
+      below) arrives once Bel Nails' Meta Developer App and Instagram Business account are set up.
+    </p>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+(async function () {
+  var user = await Admin.requireSession(['MASTER', 'DEPUTY']);
+  var isMaster = user.role === 'MASTER';
+
+  document.getElementById('masterOnlyApprovals').hidden = !isMaster;
+  document.getElementById('deputyQuickActions').hidden = isMaster;
+
+  try {
+    var { items } = await Admin.api('/api/portfolio');
+
+    var counts = { draft: 0, pending_approval: 0, published: 0, rejected: 0 };
+    items.forEach(function (i) { counts[i.status] = (counts[i.status] || 0) + 1; });
+
+    var cards = [
+      { label: 'Published Designs', value: counts.published, meta: 'Live on the public Lookbook' },
+      { label: 'Drafts', value: counts.draft, meta: 'Not yet submitted' },
+    ];
+    if (isMaster) {
+      cards.push({ label: 'Awaiting Approval', value: counts.pending_approval, meta: 'Needs your review' });
+      cards.push({ label: 'Rejected', value: counts.rejected, meta: 'Sent back to the Deputy' });
+    } else {
+      cards.push({ label: 'Submitted', value: counts.pending_approval, meta: 'Awaiting Master approval' });
+    }
+    document.getElementById('statGrid').innerHTML = cards.map(function (c) {
+      return '<div class="stat-card"><div class="stat-card__label">' + c.label + '</div>' +
+        '<div class="stat-card__value">' + c.value + '</div>' +
+        '<div class="stat-card__meta">' + c.meta + '</div></div>';
+    }).join('');
+
+    if (isMaster) {
+      var pending = items.filter(function (i) { return i.status === 'pending_approval'; }).slice(0, 5);
+      document.getElementById('approvalsList').innerHTML = pending.length
+        ? pending.map(renderRow).join('')
+        : '<p class="panel__empty">Nothing awaiting approval right now.</p>';
+    }
+
+    var recent = items.slice(0, 8);
+    document.getElementById('recentPortfolioList').innerHTML = recent.length
+      ? recent.map(renderRow).join('')
+      : '<p class="panel__empty">No designs yet — ' + (isMaster ? 'waiting on the Deputy to submit some.' : 'import your first Instagram post to get started.') + '</p>';
+  } catch (err) {
+    Admin.toast(err.message, true);
+  }
+
+  function renderRow(item) {
+    var statusLabel = item.status.replace('_', ' ');
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--line)">' +
+      '<div><strong>BN-' + item.reference_number + '</strong> &middot; ' + Admin.escapeHtml(item.title) +
+      (item.source === 'instagram' ? ' <span class="muted text-sm">(Instagram)</span>' : '') + '</div>' +
+      '<span class="status-pill status-pill--' + item.status + '">' + statusLabel + '</span>' +
+      '</div>';
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio | Bel Nails Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin" data-page="portfolio">
+
+<div id="pageContent" hidden>
+  <div class="panel__head" style="margin-bottom:1.25rem">
+    <p class="muted text-sm" style="max-width:60ch">
+      Add a design manually, or paste an Instagram post URL and upload the image yourself —
+      Bel Nails doesn't have official Instagram API access connected yet, so this is the safe,
+      real fallback: no scraping, no stored Instagram passwords.
+    </p>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+      <button class="btn btn--primary btn--sm" id="addDesignBtn" type="button">+ Add Design</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="draft">Draft</option>
+      <option value="pending_approval">Pending approval</option>
+      <option value="published">Published</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <select id="filterSource">
+      <option value="">All sources</option>
+      <option value="manual">Manual</option>
+      <option value="instagram">Instagram</option>
+    </select>
+    <input type="search" id="filterSearch" placeholder="Search by name…">
+  </div>
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th></th><th>BN #</th><th>Design</th><th>Tags</th><th>Source</th><th>Status</th><th>Created by</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <p class="panel__empty" id="emptyState" hidden>No designs match these filters yet.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== ADD / EDIT MODAL ============================== -->
+<div class="modal-overlay" id="editorOverlay">
+  <div class="modal">
+    <div class="modal__head">
+      <h2 id="editorTitle">Add to Bel Nails</h2>
+      <button class="modal__close" id="editorClose" type="button" aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+
+    <form id="editorForm">
+      <div class="field">
+        <label>Source</label>
+        <div class="chip-select" id="sourceToggle">
+          <span class="chip-toggle is-selected" data-source="manual">Manual upload</span>
+          <span class="chip-toggle" data-source="instagram">Add from Instagram</span>
+        </div>
+      </div>
+
+      <div class="field" id="instagramUrlField" hidden>
+        <label for="instagramUrl">Instagram post URL</label>
+        <input type="url" id="instagramUrl" placeholder="https://www.instagram.com/p/...">
+      </div>
+
+      <div class="field">
+        <label>Image</label>
+        <div class="image-drop" id="imageDrop">
+          <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp">
+          <div id="imagePreviewWrap">
+            <span id="imageDropLabel">Click to upload a JPG, PNG or WebP (max 8MB)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="title">Design name</label>
+        <input type="text" id="title" required placeholder="e.g. Chrome French Almond">
+      </div>
+
+      <div class="field">
+        <label>Style (select any that apply)</label>
+        <div class="chip-select" data-group="style" data-multi="true"></div>
+      </div>
+
+      <div class="form-row form-row--2">
+        <div class="field">
+          <label>Shape</label>
+          <div class="chip-select" data-group="shape"></div>
+        </div>
+        <div class="field">
+          <label>Length</label>
+          <div class="chip-select" data-group="length"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Colour (select any that apply)</label>
+        <div class="chip-select" data-group="color" data-multi="true"></div>
+      </div>
+
+      <div class="field">
+        <label>Finish</label>
+        <div class="chip-select" data-group="finish"></div>
+      </div>
+
+      <div class="field">
+        <label>Nail art</label>
+        <div class="chip-select" data-group="artStyle"></div>
+      </div>
+
+      <div class="form-row form-row--2">
+        <div class="field">
+          <label for="recommendedService">Recommended service</label>
+          <select id="recommendedService">
+            <option value="">— None —</option>
+            <option value="Acrylic">Acrylic</option>
+            <option value="Builder Gel">Builder Gel</option>
+            <option value="Gel-X">Gel-X</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="priceLabel">Price (if confirmed)</label>
+          <input type="text" id="priceLabel" placeholder="e.g. €45">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Flags</label>
+        <div class="chip-select">
+          <span class="chip-toggle" data-flag="featured">Featured</span>
+          <span class="chip-toggle" data-flag="seasonal">Seasonal</span>
+          <span class="chip-toggle" data-flag="trending">Trending</span>
+        </div>
+      </div>
+
+      <div class="field" id="rejectionNoteField" hidden>
+        <label for="rejectionNote">Note for the Deputy (optional)</label>
+        <textarea id="rejectionNote" placeholder="What should be changed before resubmitting?"></textarea>
+      </div>
+
+      <div class="modal__foot" id="editorActions"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================== DELETE CONFIRM MODAL (Master only) ============================== -->
+<div class="modal-overlay" id="deleteOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal__head"><h2>Delete this design?</h2></div>
+    <p class="text-sm">This permanently removes <strong id="deleteTargetLabel"></strong> from the portfolio. This cannot be undone.</p>
+    <label class="text-sm muted" style="display:block;margin-top:1rem">Type <strong>DELETE</strong> to confirm</label>
+    <input type="text" class="confirm-type-box" id="deleteConfirmInput" autocomplete="off">
+    <div class="modal__foot">
+      <button class="btn btn--outline-ink btn--sm" id="deleteCancelBtn" type="button">Cancel</button>
+      <button class="btn btn--primary btn--sm" id="deleteConfirmBtn" type="button" disabled>Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script src="js/portfolio.js"></script>
+</body>
+</html>

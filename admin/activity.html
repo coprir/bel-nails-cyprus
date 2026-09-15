@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Log | Bel Nails Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin" data-page="activity">
+
+<div id="pageContent" hidden>
+  <p class="muted text-sm" style="margin-bottom:1.25rem">
+    Master-only, read-only, append-only — there is no delete control for this log, for anyone, including the Master.
+  </p>
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Time</th><th>User</th><th>Action</th><th>Object</th><th>Status</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <p class="panel__empty" id="emptyState" hidden>No activity recorded yet.</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+(async function () {
+  await Admin.requireSession(['MASTER']);
+  try {
+    var data = await Admin.api('/api/admin/activity');
+    var rows = data.events;
+    document.getElementById('emptyState').hidden = rows.length > 0;
+    document.getElementById('tableBody').innerHTML = rows.map(function (e) {
+      var d = new Date(e.created_at);
+      return '<tr>' +
+        '<td class="text-sm">' + d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) + '</td>' +
+        '<td class="text-sm">' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) + '</td>' +
+        '<td>' + Admin.escapeHtml(e.user_name || 'System') + (e.user_role ? ' <span class="text-sm muted">(' + e.user_role + ')</span>' : '') + '</td>' +
+        '<td class="text-sm">' + Admin.escapeHtml(e.action.replace(/_/g, ' ')) + '</td>' +
+        '<td class="text-sm muted">' + Admin.escapeHtml(e.object_id || '—') + '</td>' +
+        '<td><span class="status-pill status-pill--' + (e.status === 'success' ? 'published' : 'rejected') + '">' + e.status + '</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch (err) { Admin.toast(err.message, true); }
+})();
+</script>
+</body>
+</html>

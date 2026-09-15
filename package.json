@@ -1,0 +1,19 @@
+{
+  "name": "bel-nails-cyprus",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Bel Nails Cyprus — public website (static) + admin backend (Vercel Serverless Functions + Postgres).",
+  "type": "module",
+  "scripts": {
+    "init-master": "node scripts/init-master.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.0",
+    "bcryptjs": "^2.4.3",
+    "cookie": "^0.7.1",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

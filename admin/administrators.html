@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrators | Bel Nails Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin" data-page="administrators">
+
+<div id="pageContent" hidden>
+  <div class="panel__head">
+    <p class="muted text-sm">Master-only. Create Deputy accounts, disable or remove them, reset passwords, and revoke sessions.</p>
+    <button class="btn btn--primary btn--sm" id="addAdminBtn" type="button">+ Add Administrator</button>
+  </div>
+
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Active sessions</th><th>Last active</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add administrator -->
+<div class="modal-overlay" id="addOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal__head">
+      <h2>Add Administrator</h2>
+      <button class="modal__close" id="addClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="field">
+      <label for="newName">Name</label>
+      <input type="text" id="newName">
+    </div>
+    <div class="field">
+      <label for="newEmail">Email</label>
+      <input type="email" id="newEmail">
+    </div>
+    <div class="field">
+      <label for="newPassword">Temporary password</label>
+      <input type="text" id="newPassword" placeholder="At least 10 characters">
+      <p class="text-sm muted mt-1">They'll be required to change this on first login.</p>
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <div class="chip-select" id="roleToggle">
+        <span class="chip-toggle is-selected" data-role="DEPUTY">Deputy</span>
+        <span class="chip-toggle" data-role="MASTER">Master (rare — requires confirmation)</span>
+      </div>
+    </div>
+    <label class="text-sm" id="masterConfirmRow" hidden style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem">
+      <input type="checkbox" id="confirmMasterCheckbox"> I understand this creates an additional full-access Master account.
+    </label>
+    <div class="modal__foot">
+      <button class="btn btn--outline-ink btn--sm" id="addCancel" type="button">Cancel</button>
+      <button class="btn btn--primary btn--sm" id="addSubmit" type="button">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset password -->
+<div class="modal-overlay" id="resetOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal__head">
+      <h2>Reset Password</h2>
+      <button class="modal__close" id="resetClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <p class="text-sm" id="resetTargetLabel"></p>
+    <div class="field">
+      <label for="resetPassword">New temporary password</label>
+      <input type="text" id="resetPassword" placeholder="At least 10 characters">
+    </div>
+    <p class="text-sm muted">This immediately signs them out everywhere. They'll set their own password after logging in.</p>
+    <div class="modal__foot">
+      <button class="btn btn--outline-ink btn--sm" id="resetCancel" type="button">Cancel</button>
+      <button class="btn btn--primary btn--sm" id="resetSubmit" type="button">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal-overlay" id="deleteOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal__head"><h2>Remove this administrator?</h2></div>
+    <p class="text-sm" id="deleteLabel"></p>
+    <label class="text-sm muted" style="display:block;margin-top:1rem">Type <strong>DELETE</strong> to confirm</label>
+    <input type="text" class="confirm-type-box" id="deleteInput" autocomplete="off">
+    <div class="modal__foot">
+      <button class="btn btn--outline-ink btn--sm" id="deleteCancel" type="button">Cancel</button>
+      <button class="btn btn--primary btn--sm" id="deleteSubmit" type="button" disabled>Remove Permanently</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+(function () {
+  var users = [];
+  var resetTargetId = null, deleteTargetId = null;
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    await Admin.requireSession(['MASTER']);
+    wireModals();
+    await load();
+  });
+
+  async function load() {
+    try {
+      var data = await Admin.api('/api/admin/administrators');
+      users = data.users;
+      render();
+    } catch (err) { Admin.toast(err.message, true); }
+  }
+
+  function render() {
+    document.getElementById('tableBody').innerHTML = users.map(function (u) {
+      var isMaster = u.role === 'MASTER';
+      var lastActive = u.last_login ? new Date(u.last_login).toLocaleString() : 'Never';
+      var actions = [];
+      if (u.status === 'active') actions.push(btn('disable', u.id, 'Disable'));
+      else actions.push(btn('enable', u.id, 'Enable'));
+      actions.push('<button class="btn btn--ghost" data-reset="' + u.id + '">Reset Password</button>');
+      actions.push('<button class="btn btn--ghost" data-revoke="' + u.id + '">Revoke Sessions</button>');
+      actions.push('<button class="btn btn--ghost" data-delete="' + u.id + '" style="color:#8a2b2b">Delete</button>');
+
+      return '<tr>' +
+        '<td>' + Admin.escapeHtml(u.name) + '</td>' +
+        '<td>' + Admin.escapeHtml(u.email) + '</td>' +
+        '<td><span class="admin-sidebar__role admin-sidebar__role--' + (isMaster ? 'master' : 'deputy') + '" style="position:static">' + u.role + '</span></td>' +
+        '<td><span class="status-pill status-pill--' + u.status + '">' + u.status + '</span></td>' +
+        '<td>' + u.active_sessions + '</td>' +
+        '<td class="text-sm muted">' + lastActive + '</td>' +
+        '<td><div class="table-actions">' + actions.join('') + '</div></td>' +
+        '</tr>';
+    }).join('');
+
+    document.querySelectorAll('[data-disable],[data-enable]').forEach(function (b) {
+      b.addEventListener('click', function () { toggleStatus(b); });
+    });
+    document.querySelectorAll('[data-reset]').forEach(function (b) {
+      b.addEventListener('click', function () { openReset(b.dataset.reset); });
+    });
+    document.querySelectorAll('[data-revoke]').forEach(function (b) {
+      b.addEventListener('click', function () { revoke(b.dataset.revoke); });
+    });
+    document.querySelectorAll('[data-delete]').forEach(function (b) {
+      b.addEventListener('click', function () { openDelete(b.dataset.delete); });
+    });
+  }
+
+  function btn(action, id, label) {
+    return '<button class="btn btn--ghost" data-' + action + '="' + id + '">' + label + '</button>';
+  }
+
+  async function toggleStatus(b) {
+    var id = b.dataset.disable || b.dataset.enable;
+    var action = b.dataset.disable ? 'disable' : 'enable';
+    try {
+      await Admin.api('/api/admin/administrators/' + id, { method: 'PATCH', body: { action: action } });
+      Admin.toast('Updated.');
+      await load();
+    } catch (err) { Admin.toast(err.message, true); }
+  }
+
+  async function revoke(id) {
+    try {
+      await Admin.api('/api/admin/administrators/' + id, { method: 'PATCH', body: { action: 'revoke_sessions' } });
+      Admin.toast('Sessions revoked.');
+      await load();
+    } catch (err) { Admin.toast(err.message, true); }
+  }
+
+  function wireModals() {
+    document.getElementById('addAdminBtn').addEventListener('click', function () {
+      document.getElementById('newName').value = '';
+      document.getElementById('newEmail').value = '';
+      document.getElementById('newPassword').value = '';
+      document.querySelectorAll('#roleToggle .chip-toggle').forEach(function (c) { c.classList.toggle('is-selected', c.dataset.role === 'DEPUTY'); });
+      document.getElementById('masterConfirmRow').hidden = true;
+      document.getElementById('confirmMasterCheckbox').checked = false;
+      document.getElementById('addOverlay').classList.add('is-open');
+    });
+    document.getElementById('addClose').addEventListener('click', function () { document.getElementById('addOverlay').classList.remove('is-open'); });
+    document.getElementById('addCancel').addEventListener('click', function () { document.getElementById('addOverlay').classList.remove('is-open'); });
+    document.querySelectorAll('#roleToggle .chip-toggle').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('#roleToggle .chip-toggle').forEach(function (c) { c.classList.remove('is-selected'); });
+        chip.classList.add('is-selected');
+        document.getElementById('masterConfirmRow').hidden = chip.dataset.role !== 'MASTER';
+      });
+    });
+    document.getElementById('addSubmit').addEventListener('click', async function () {
+      var role = document.querySelector('#roleToggle .chip-toggle.is-selected').dataset.role;
+      if (role === 'MASTER' && !document.getElementById('confirmMasterCheckbox').checked) {
+        Admin.toast('Please confirm before creating a second Master account.', true);
+        return;
+      }
+      try {
+        await Admin.api('/api/admin/administrators', {
+          method: 'POST',
+          body: {
+            name: document.getElementById('newName').value.trim(),
+            email: document.getElementById('newEmail').value.trim(),
+            password: document.getElementById('newPassword').value,
+            role: role,
+            confirmAdditionalMaster: role === 'MASTER',
+          },
+        });
+        Admin.toast('Administrator created.');
+        document.getElementById('addOverlay').classList.remove('is-open');
+        await load();
+      } catch (err) { Admin.toast(err.message, true); }
+    });
+
+    document.getElementById('resetClose').addEventListener('click', function () { document.getElementById('resetOverlay').classList.remove('is-open'); });
+    document.getElementById('resetCancel').addEventListener('click', function () { document.getElementById('resetOverlay').classList.remove('is-open'); });
+    document.getElementById('resetSubmit').addEventListener('click', async function () {
+      try {
+        await Admin.api('/api/admin/administrators/' + resetTargetId, { method: 'PATCH', body: { action: 'reset_password', newPassword: document.getElementById('resetPassword').value } });
+        Admin.toast('Password reset.');
+        document.getElementById('resetOverlay').classList.remove('is-open');
+      } catch (err) { Admin.toast(err.message, true); }
+    });
+
+    document.getElementById('deleteCancel').addEventListener('click', function () { document.getElementById('deleteOverlay').classList.remove('is-open'); });
+    document.getElementById('deleteInput').addEventListener('input', function (e) {
+      document.getElementById('deleteSubmit').disabled = e.target.value !== 'DELETE';
+    });
+    document.getElementById('deleteSubmit').addEventListener('click', async function () {
+      try {
+        await Admin.api('/api/admin/administrators/' + deleteTargetId, { method: 'DELETE', body: { confirm: true } });
+        Admin.toast('Administrator removed.');
+        document.getElementById('deleteOverlay').classList.remove('is-open');
+        await load();
+      } catch (err) { Admin.toast(err.message, true); }
+    });
+  }
+
+  function openReset(id) {
+    resetTargetId = id;
+    var u = users.filter(function (x) { return x.id === id; })[0];
+    document.getElementById('resetTargetLabel').textContent = 'Resetting password for ' + u.name + ' (' + u.email + ')';
+    document.getElementById('resetPassword').value = '';
+    document.getElementById('resetOverlay').classList.add('is-open');
+  }
+
+  function openDelete(id) {
+    deleteTargetId = id;
+    var u = users.filter(function (x) { return x.id === id; })[0];
+    document.getElementById('deleteLabel').textContent = u.name + ' (' + u.email + ') will lose access immediately.';
+    document.getElementById('deleteInput').value = '';
+    document.getElementById('deleteSubmit').disabled = true;
+    document.getElementById('deleteOverlay').classList.add('is-open');
+  }
+})();
+</script>
+</body>
+</html>

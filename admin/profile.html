@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile | Bel Nails Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2317110f'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23d62e72' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin" data-page="profile">
+
+<div id="pageContent" hidden>
+  <div class="panel" id="forcedNotice" hidden style="border-color:#9c1245">
+    <p class="text-sm" style="color:#9c1245"><strong>Password change required.</strong> This account is using a temporary password and must set a new one before continuing.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Account</h2></div>
+    <dl style="display:grid;gap:.75rem;font-size:.9rem">
+      <div><dt class="muted text-sm" style="display:inline">Name: </dt><dd style="display:inline" id="pName"></dd></div>
+      <div><dt class="muted text-sm" style="display:inline">Email: </dt><dd style="display:inline" id="pEmail"></dd></div>
+      <div><dt class="muted text-sm" style="display:inline">Role: </dt><dd style="display:inline" id="pRole"></dd></div>
+      <div><dt class="muted text-sm" style="display:inline">Last login: </dt><dd style="display:inline" id="pLastLogin"></dd></div>
+      <div><dt class="muted text-sm" style="display:inline">Two-factor authentication: </dt><dd style="display:inline">Not available yet (planned)</dd></div>
+    </dl>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Change Password</h2></div>
+    <div class="form-row form-row--2">
+      <div class="field">
+        <label for="currentPassword">Current password</label>
+        <input type="password" id="currentPassword" autocomplete="current-password">
+      </div>
+      <div class="field">
+        <label for="newPassword">New password</label>
+        <input type="password" id="newPassword" autocomplete="new-password">
+      </div>
+    </div>
+    <p class="text-sm muted">At least 10 characters. Changing your password signs you out on every other device.</p>
+    <button class="btn btn--primary btn--sm mt-1" id="changePasswordBtn" type="button">Update Password</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Sessions</h2></div>
+    <p class="text-sm muted">If you've signed in on another device or browser and want to be sure it's signed out, use this.</p>
+    <button class="btn btn--outline-ink btn--sm mt-1" id="revokeBtn" type="button">Log Out Other Sessions</button>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+(async function () {
+  var user = await Admin.requireSession(); // any role
+  var forced = new URLSearchParams(location.search).get('forcePasswordChange') === '1' || user.mustChangePassword;
+  document.getElementById('forcedNotice').hidden = !forced;
+
+  document.getElementById('pName').textContent = user.name;
+  document.getElementById('pEmail').textContent = user.email;
+  document.getElementById('pRole').textContent = user.role === 'MASTER' ? 'Master Admin' : 'Deputy Admin';
+  document.getElementById('pLastLogin').textContent = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'This is your first login';
+
+  document.getElementById('changePasswordBtn').addEventListener('click', async function () {
+    var current = document.getElementById('currentPassword').value;
+    var next = document.getElementById('newPassword').value;
+    if (!current || !next) { Admin.toast('Both fields are required.', true); return; }
+    try {
+      await Admin.api('/api/auth/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } });
+      Admin.toast('Password updated.');
+      if (forced) {
+        setTimeout(function () { location.href = 'dashboard.html'; }, 800);
+      } else {
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+      }
+    } catch (err) { Admin.toast(err.message, true); }
+  });
+
+  document.getElementById('revokeBtn').addEventListener('click', async function () {
+    try {
+      await Admin.api('/api/auth/revoke-sessions', { method: 'POST' });
+      Admin.toast('Other sessions have been logged out.');
+    } catch (err) { Admin.toast(err.message, true); }
+  });
+})();
+</script>
+</body>
+</html>
